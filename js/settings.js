@@ -71,11 +71,11 @@ Settings.prototype.getAll = function() {
 };
 
 Settings.prototype.set = function(key, value) {
+  this.settings_[key] = value;
   var item = {};
   item['settings-' + key] = value;
   this.storage_.set(item);
-  // this.settings_ will be updated in onChanged_ to keep them in sync with
-  // storage.
+  util.triggerEvent('settingschange', { key: key, value: value });
 };
 
 Settings.prototype.reset = function(key) {

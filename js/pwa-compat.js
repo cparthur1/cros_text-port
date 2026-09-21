@@ -114,17 +114,15 @@
         if (callback) callback(result);
       },
       set: function(items, callback) {
+        var changes = {};
         Object.keys(items).forEach(function(key) {
           localStorage.setItem(areaName + '.' + key, JSON.stringify(items[key]));
+          changes[key] = { newValue: items[key] };
         });
+        document.dispatchEvent(new CustomEvent('storageOnChanged', {
+          detail: { changes: changes, areaName: areaName }
+        }));
         if (callback) {
-          var changes = {};
-          Object.keys(items).forEach(function(key) {
-            changes[key] = { newValue: items[key] };
-          });
-          document.dispatchEvent(new CustomEvent('storageOnChanged', {
-            detail: { changes: changes, areaName: areaName }
-          }));
           callback();
         }
       },

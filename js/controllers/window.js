@@ -165,32 +165,42 @@ WindowController.prototype.setAlwaysOnTop = function(isAlwaysOnTop) {
 
 /** Opens the sidebar if it is closed. */
 WindowController.prototype.openSidebar = function() {
-  if (this.settings_.get('sidebaropen')) return;
   this.settings_.set('sidebaropen', true);
   var sidebar = document.getElementById('sidebar');
   if (sidebar) {
-    sidebar.style.width = this.settings_.get('sidebarwidth') + 'px';
-    sidebar.style.borderRightWidth = '2px';
+    var width = this.settings_.get('sidebarwidth') || 220;
     sidebar.style.visibility = 'visible';
+    sidebar.style.width = width + 'px';
+    sidebar.style.borderRightWidth = '2px';
   }
   var toggleBtn = document.getElementById('toggle-sidebar');
   if (toggleBtn) {
-    toggleBtn.setAttribute('title', chrome.i18n.getMessage('closeSidebarButton'));
+    toggleBtn.setAttribute('title', chrome.i18n.getMessage('closeSidebarButton') || 'Close sidebar');
+  }
+};
+
+/** Closes the sidebar if it is open. */
+WindowController.prototype.closeSidebar = function() {
+  this.settings_.set('sidebaropen', false);
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.style.width = '0px';
+    sidebar.style.borderRightWidth = '0px';
+  }
+  var toggleBtn = document.getElementById('toggle-sidebar');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('title', chrome.i18n.getMessage('openSidebarButton') || 'Open sidebar');
   }
 };
 
 WindowController.prototype.toggleSidebar_ = function() {
-  if (this.settings_.get('sidebaropen')) {
-    this.settings_.set('sidebaropen', false);
-    var sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-      sidebar.style.width = '0';
-      sidebar.style.borderRightWidth = '0';
-    }
-    var toggleBtn = document.getElementById('toggle-sidebar');
-    if (toggleBtn) {
-      toggleBtn.setAttribute('title', chrome.i18n.getMessage('openSidebarButton'));
-    }
+  var sidebar = document.getElementById('sidebar');
+  var isOpen = !!this.settings_.get('sidebaropen');
+  if (sidebar && parseInt(sidebar.style.width || '0', 10) > 0) {
+    isOpen = true;
+  }
+  if (isOpen) {
+    this.closeSidebar();
   } else {
     this.openSidebar();
   }
