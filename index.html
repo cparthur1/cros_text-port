@@ -277,6 +277,18 @@
       </header>
 
       <div id="editor" role="main" aria-labelledby="title-filename"></div>
+      <footer id="status-bar" role="status" aria-label="Editor Status">
+        <div class="status-bar-section status-bar-left">
+          <span id="status-cursor" class="status-item" title="Line and Column">Ln 1, Col 1</span>
+          <span id="status-selection" class="status-item" title="Selection" style="display: none;"></span>
+        </div>
+        <div class="status-bar-section status-bar-right">
+          <span id="status-stats" class="status-item" title="Word and Character Count">0 words, 0 chars</span>
+          <button id="status-line-ending" class="status-item status-button" title="Toggle Line Endings (LF / CRLF)">LF</button>
+          <span id="status-mode" class="status-item" title="Language Mode">Plain Text</span>
+          <span id="status-encoding" class="status-item" title="File Encoding">UTF-8</span>
+        </div>
+      </footer>
     </div> <!-- main-container -->
   </div> <!-- window-container -->
 
@@ -309,6 +321,7 @@
   <script src="js/controllers/menu.js" type="text/javascript"></script>
   <script src="js/controllers/search.js" type="text/javascript"></script>
   <script src="js/controllers/settings.js" type="text/javascript"></script>
+  <script src="js/controllers/status.js" type="text/javascript"></script>
   <script src="js/controllers/window.js" type="text/javascript"></script>
   <!-- /JS -->
 

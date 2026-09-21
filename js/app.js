@@ -12,6 +12,7 @@ function TextApp() {
   this.menuController_ = null;
   this.searchController_ = null;
   this.settingsController_ = null;
+  this.statusController_ = null;
   this.windowController_ = null;
 
   this.hasFrame_ = false;
@@ -100,6 +101,8 @@ TextApp.prototype.initControllers_ = function() {
   this.menuController_ = new MenuController(this.tabs_);
   this.windowController_ =
       new WindowController(this.editor_, this.settings_, this.tabs_);
+  this.statusController_ =
+      new StatusController(this.editor_, this.tabs_);
   this.hotkeysController_ = new HotkeysController(
       this.windowController_, this.tabs_, this.editor_, this.settings_,
       this.settingsController_);

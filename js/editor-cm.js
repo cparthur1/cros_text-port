@@ -286,6 +286,7 @@ EditorCodeMirror.prototype.setSession = function(editorState, fileExtension) {
   // want the settings to affect all the tabs.
   this.applyAllSettings();
   this.updateMode(fileExtension);
+  this.updateStatus_();
 };
 
 /**
@@ -420,6 +421,56 @@ EditorCodeMirror.prototype.onViewUpdate = function(update) {
   if (update.docChanged) {
     $.event.trigger('docchange');
   }
+  if (update.docChanged || update.selectionSet) {
+    this.updateStatus_(update.state);
+  }
+};
+
+/**
+ * Calculates and dispatches cursor position, selection, word and character count.
+ * @param {window.CodeMirror.state.EditorState=} opt_state
+ */
+EditorCodeMirror.prototype.updateStatus_ = function(opt_state) {
+  const state = opt_state || (this.editorView_ && this.editorView_.state);
+  if (!state) return;
+
+  const mainSelection = state.selection && state.selection.main;
+  const head = mainSelection ? mainSelection.head : 0;
+  const line = state.doc.lineAt(head);
+  const lineNum = line.number;
+  const colNum = head - line.from + 1;
+
+  let selectionInfo = null;
+  if (mainSelection && !mainSelection.empty) {
+    const chars = Math.abs(mainSelection.to - mainSelection.from);
+    const fromLine = state.doc.lineAt(mainSelection.from).number;
+    const toLine = state.doc.lineAt(mainSelection.to).number;
+    const lines = toLine - fromLine + 1;
+    if (lines > 1) {
+      selectionInfo = lines + ' lines, ' + chars + ' chars selected';
+    } else {
+      selectionInfo = chars + ' selected';
+    }
+  }
+
+  if (this.cachedDocVersion_ !== state.doc) {
+    this.cachedDocVersion_ = state.doc;
+    this.cachedDocLength_ = state.doc.length;
+    const text = state.doc.length < 500000 ? state.doc.toString() : state.doc.sliceString(0, 500000);
+    const matches = text.match(/\b\S+\b/g);
+    this.cachedWordCount_ = matches ? matches.length : 0;
+  }
+
+  const statusData = {
+    line: lineNum,
+    col: colNum,
+    selection: selectionInfo,
+    words: this.cachedWordCount_ || 0,
+    chars: this.cachedDocLength_ || 0,
+    lines: state.doc.lines
+  };
+
+  $.event.trigger('cursoractivity', statusData);
 };
 
 EditorCodeMirror.prototype.disable = function() {
