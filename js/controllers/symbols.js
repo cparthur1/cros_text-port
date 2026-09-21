@@ -52,6 +52,8 @@ SymbolsController.SYMBOLS = [
   { char: '½', name: 'one half', category: 'math', tags: 'fraction half one second' },
   { char: '¾', name: 'three quarters', category: 'math', tags: 'fraction three fourths' },
   { char: '—', name: 'em dash', category: 'typography', tags: 'dash emdash hyphen punctuation' },
+  { char: '⟲', name: 'anticlockwise open circle arrow', category: 'arrows', tags: 'undo rotate circle loop repeat counterclockwise' },
+  { char: '⟳', name: 'clockwise open circle arrow', category: 'arrows', tags: 'redo rotate circle loop repeat clockwise' },
 
   // Additional useful arrows
   { char: '⇒', name: 'implies', category: 'arrows', tags: 'implies right double arrow' },
