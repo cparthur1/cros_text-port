@@ -23,10 +23,18 @@ function Tab(id, session, lineEndings, entry, dialogController, opt_isMissing, o
   this.savePending_ = false;
   this.pendingSaveCallbacks_ = [];
   this.handleId_ = (entry && entry.handleId) || null;
+  this.lastModified_ = null;
   if (this.entry_) {
     this.updatePath_();
     if (this.entry_.isMissing) {
       this.isMissing_ = true;
+    }
+    if (typeof this.entry_.file === 'function') {
+      this.entry_.file(function(file) {
+        if (file) {
+          this.lastModified_ = file.lastModified;
+        }
+      }.bind(this));
     }
   }
 };
@@ -88,6 +96,13 @@ Tab.prototype.setEntry = function(entry) {
     if (!entry.isMissing) {
       this.setMissing(false);
     }
+    if (typeof entry.file === 'function') {
+      entry.file(function(file) {
+        if (file) {
+          this.lastModified_ = file.lastModified;
+        }
+      }.bind(this));
+    }
   }
   if (nameChanged)
     $.event.trigger('tabrenamed', this);
@@ -142,6 +157,15 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
     function() {
       this.isSaving_ = false;
       this.saveError_ = false;
+
+      this.lastModified_ = Date.now();
+      if (this.entry_ && typeof this.entry_.file === 'function') {
+        this.entry_.file(function(file) {
+          if (file) {
+            this.lastModified_ = file.lastModified;
+          }
+        }.bind(this));
+      }
 
       var callbacks = this.pendingSaveCallbacks_.slice();
       this.pendingSaveCallbacks_ = [];
@@ -222,8 +246,11 @@ function Tabs(editor, dialogController, settings) {
   $(document).bind('docchange', this.onDocChanged_.bind(this));
   $(document).bind('settingschange', this.onSettingsChanged_.bind(this));
   $(window).bind('blur', this.onWindowBlur_.bind(this));
+  window.addEventListener('focus', this.checkExternalModifications_.bind(this));
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'hidden') {
+    if (document.visibilityState === 'visible') {
+      this.checkExternalModifications_();
+    } else if (document.visibilityState === 'hidden') {
       this.saveSession_();
       this.onWindowBlur_();
     }
@@ -368,6 +395,10 @@ Tabs.prototype.nextTab = function() {
 };
 
 Tabs.prototype.showTab = function(tabId) {
+  if (this.currentTab_ && this.currentTab_.getId() === tabId) {
+    return;
+  }
+
   if (this.currentTab_) {
     // Before switching tabs, write the editorView's state to the tab.
     this.updateCurrentTabState_();
@@ -390,6 +421,7 @@ Tabs.prototype.showTab = function(tabId) {
   $.event.trigger('switchtab', tab);
   this.editor_.focus();
   this.saveSession_();
+  this.checkSingleTabModification_(tab);
 };
 
 
@@ -638,7 +670,10 @@ Tabs.prototype.readFileToNewTab_ = function(entry, file) {
   var reader = new FileReader();
   reader.onerror = util.handleFSError;
   reader.onloadend = function(e) {
-    self.newTab(this.result, entry);
+    var tab = self.newTab(this.result, entry);
+    if (file) {
+      tab.lastModified_ = file.lastModified;
+    }
     if (self.tabs_.length === 2 &&
         !self.tabs_[0].getEntry() &&
         self.tabs_[0].isSaved() &&
@@ -863,6 +898,7 @@ Tabs.prototype.restoreSession_ = async function() {
     for (var i = 0; i < session.tabs.length; i++) {
       var tabData = session.tabs[i];
       var entry = null;
+      var fileObj = null;
       var isMissing = !!tabData.isMissing;
       var content = tabData.content || '';
 
@@ -873,6 +909,7 @@ Tabs.prototype.restoreSession_ = async function() {
             if (handle) {
               try {
                 var file = await handle.getFile();
+                fileObj = file;
                 entry = new window.FileEntryPolyfill(handle, tabData.handleId);
                 isMissing = false;
                 try {
@@ -905,6 +942,9 @@ Tabs.prototype.restoreSession_ = async function() {
       var lineEndings = tabData.lineEndings || util.guessLineEndings(content);
       var tab = new Tab(id, sessionState, lineEndings, entry, this.dialogController_, isMissing, tabData.name, tabData.path);
       tab.handleId_ = tabData.handleId;
+      if (fileObj) {
+        tab.lastModified_ = fileObj.lastModified;
+      }
       if (tabData.saved === false) {
         tab.changed();
       }
@@ -924,3 +964,172 @@ Tabs.prototype.restoreSession_ = async function() {
     this.restoringSession_ = false;
   }
 };
+
+/**
+ * Checks open tabs for external modifications on disk.
+ */
+Tabs.prototype.checkExternalModifications_ = function() {
+  if (this.checkingExternalModifications_ || this.showingExternalModDialog_) {
+    return;
+  }
+  if (this.dialogController_ && this.dialogController_.isOpen()) {
+    return;
+  }
+  var now = Date.now();
+  if (this.lastExternalCheckTime_ && (now - this.lastExternalCheckTime_) < 1000) {
+    return;
+  }
+  this.lastExternalCheckTime_ = now;
+
+  var tabsToCheck = [];
+  if (this.currentTab_ && this.currentTab_.getEntry() && !this.currentTab_.isMissing()) {
+    tabsToCheck.push(this.currentTab_);
+  }
+  for (var i = 0; i < this.tabs_.length; i++) {
+    var t = this.tabs_[i];
+    if (t !== this.currentTab_ && t.getEntry() && !t.isMissing()) {
+      tabsToCheck.push(t);
+    }
+  }
+
+  if (tabsToCheck.length === 0) return;
+
+  this.checkingExternalModifications_ = true;
+  this.checkNextTabModification_(tabsToCheck, 0);
+};
+
+/**
+ * Checks a single tab for external modification.
+ * @param {Tab} tab
+ */
+Tabs.prototype.checkSingleTabModification_ = function(tab) {
+  if (!tab || !tab.getEntry() || tab.isMissing() || tab.isSaving_ || this.showingExternalModDialog_) {
+    return;
+  }
+  if (this.dialogController_ && this.dialogController_.isOpen()) {
+    return;
+  }
+  this.checkNextTabModification_([tab], 0);
+};
+
+/**
+ * Iterates through tabs to check for external modifications.
+ * @param {Tab[]} tabsToCheck
+ * @param {number} index
+ * @private
+ */
+Tabs.prototype.checkNextTabModification_ = function(tabsToCheck, index) {
+  var self = this;
+  if (index >= tabsToCheck.length) {
+    this.checkingExternalModifications_ = false;
+    return;
+  }
+
+  var tab = tabsToCheck[index];
+  if (!tab || this.tabs_.indexOf(tab) === -1 || !tab.getEntry() || tab.isMissing() || tab.isSaving_) {
+    this.checkNextTabModification_(tabsToCheck, index + 1);
+    return;
+  }
+
+  tab.getEntry().file(function(file) {
+    if (!file) {
+      self.checkNextTabModification_(tabsToCheck, index + 1);
+      return;
+    }
+
+    if (!tab.lastModified_) {
+      tab.lastModified_ = file.lastModified;
+      self.checkNextTabModification_(tabsToCheck, index + 1);
+      return;
+    }
+
+    if (file.lastModified <= tab.lastModified_) {
+      self.checkNextTabModification_(tabsToCheck, index + 1);
+      return;
+    }
+
+    // External modification detected!
+    if (tab.isSaved()) {
+      // Clean tab: reload automatically from disk
+      var readPromise = (typeof file.text === 'function') ? file.text() : new Promise(function(res) {
+        var reader = new FileReader();
+        reader.onload = function(e) { res(e.target.result); };
+        reader.readAsText(file);
+      });
+
+      readPromise.then(function(newContent) {
+        tab.lastModified_ = file.lastModified;
+        tab.lineEndings_ = util.guessLineEndings(newContent);
+        var oldContent = tab.getContent_();
+        if (newContent !== oldContent) {
+          var newState = self.editor_.newState(newContent);
+          tab.setSession(newState);
+          if (self.currentTab_ === tab) {
+            self.editor_.setSession(newState, tab.getExtension());
+          }
+          $.event.trigger('tabreloaded', tab);
+          self.saveSession_();
+          var toastMsg = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('fileReloadedToast', tab.getName())) || (tab.getName() + ' reloaded (modified externally)');
+          util.showToast(toastMsg);
+        }
+        self.checkNextTabModification_(tabsToCheck, index + 1);
+      }).catch(function(err) {
+        console.warn('Error reading modified file:', err);
+        self.checkNextTabModification_(tabsToCheck, index + 1);
+      });
+    } else {
+      // Conflict: tab has unsaved changes!
+      if (tab.autoSaveTimeout_) {
+        clearTimeout(tab.autoSaveTimeout_);
+        tab.autoSaveTimeout_ = null;
+      }
+      self.showingExternalModDialog_ = true;
+      if (self.currentTab_ !== tab) {
+        self.showTab(tab.getId());
+      }
+
+      var line1 = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('externalModificationPromptLine1', tab.getName())) || (tab.getName() + ' has been modified by another program.');
+      var line2 = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('externalModificationPromptLine2')) || 'Do you want to reload it and lose your unsaved changes?';
+      var reloadBtn = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('reloadDialogButton')) || 'Reload';
+      var keepBtn = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('keepLocalDialogButton')) || 'Keep Local Changes';
+
+      self.dialogController_.setText(line1, line2);
+      self.dialogController_.resetButtons();
+      self.dialogController_.addButton('reload', reloadBtn);
+      self.dialogController_.addButton('keep', keepBtn);
+      self.dialogController_.show(function(choice) {
+        self.showingExternalModDialog_ = false;
+        if (choice === 'reload') {
+          var readPromise = (typeof file.text === 'function') ? file.text() : new Promise(function(res) {
+            var reader = new FileReader();
+            reader.onload = function(e) { res(e.target.result); };
+            reader.readAsText(file);
+          });
+          readPromise.then(function(newContent) {
+            tab.lastModified_ = file.lastModified;
+            tab.lineEndings_ = util.guessLineEndings(newContent);
+            var newState = self.editor_.newState(newContent);
+            tab.setSession(newState);
+            tab.saved_ = true;
+            if (self.currentTab_ === tab) {
+              self.editor_.setSession(newState, tab.getExtension());
+            }
+            $.event.trigger('tabsave', tab);
+            self.saveSession_();
+            var toastMsg = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('fileReloadedToast', tab.getName())) || (tab.getName() + ' reloaded (modified externally)');
+            util.showToast(toastMsg);
+            self.checkNextTabModification_(tabsToCheck, index + 1);
+          }).catch(function(err) {
+            console.warn('Error reading file on reload:', err);
+            self.checkNextTabModification_(tabsToCheck, index + 1);
+          });
+        } else {
+          // Keep local changes: update lastModified_ so we don't prompt again for this external timestamp
+          tab.lastModified_ = file.lastModified;
+          self.checkNextTabModification_(tabsToCheck, index + 1);
+        }
+      });
+    }
+  });
+};
+

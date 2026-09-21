@@ -14,6 +14,10 @@ function DialogController(container, editor) {
  * is pressed. In case of button click, the button id is passed to callback. In
  * case of Esc, 'cancel' is passed.
  */
+DialogController.prototype.isOpen = function() {
+  return this.container_.hasClass('open');
+};
+
 DialogController.prototype.show = function(callback) {
   if (this.container_.hasClass('open')) {
     console.error('Trying to open dialog when it is already visible.');

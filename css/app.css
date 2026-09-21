@@ -1055,3 +1055,32 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   font-weight: 500;
   letter-spacing: 0.2px;
 }
+
+/* Toast Notification */
+.toast-notification {
+  align-items: center;
+  background-color: var(--ta-background-color, #202124);
+  border: 1px solid var(--ta-sidebar-hr-color, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  bottom: 40px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  color: var(--ta-ui-text-color, #ffffff);
+  display: flex;
+  font-size: 13px;
+  gap: 10px;
+  left: 50%;
+  max-width: 90%;
+  opacity: 0;
+  padding: 10px 20px;
+  pointer-events: none;
+  position: fixed;
+  transform: translateX(-50%) translateY(16px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 10001;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}

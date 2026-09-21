@@ -92,3 +92,27 @@ util.guessLineEndings = function(text) {
 
   return (hasCRLF ? '\r\n' : '\n');
 };
+
+/**
+ * Displays a lightweight toast notification.
+ * @param {string} message
+ * @param {number=} opt_duration
+ */
+util.showToast = function(message, opt_duration) {
+  var toast = document.getElementById('toast-notification');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = 'toast-notification';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  if (util.toastTimeout_) {
+    clearTimeout(util.toastTimeout_);
+  }
+  util.toastTimeout_ = setTimeout(function() {
+    toast.classList.remove('show');
+  }, opt_duration || 3000);
+};
+

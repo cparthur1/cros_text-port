@@ -226,5 +226,25 @@
   "dropFilesToOpen": {
     "message": "Drop files here to open",
     "description": "Overlay text when dragging files into the editor."
+  },
+  "externalModificationPromptLine1": {
+    "message": "$1 has been modified by another program.",
+    "description": "First line of external file modification dialog."
+  },
+  "externalModificationPromptLine2": {
+    "message": "Do you want to reload it and lose your unsaved changes?",
+    "description": "Second line of external file modification dialog."
+  },
+  "reloadDialogButton": {
+    "message": "Reload",
+    "description": "Button to reload file from disk."
+  },
+  "keepLocalDialogButton": {
+    "message": "Keep Local Changes",
+    "description": "Button to keep local changes when external modification detected."
+  },
+  "fileReloadedToast": {
+    "message": "$1 reloaded (modified externally)",
+    "description": "Toast notification when clean file is reloaded from disk."
   }
 }
