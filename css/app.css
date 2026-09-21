@@ -1019,27 +1019,28 @@ input[type=search]:focus {
 /* Dialog */
 #dialog-container {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
-  -webkit-box-align: center;
-  -webkit-box-pack: center;
+  z-index: 10002;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  align-items: center;
+  justify-content: center;
 }
 
 #dialog-container.open {
-  display: -webkit-box;
+  display: flex;
 }
-
-/* Currently this dialog is always light, unclear if this was intentional. */
 
 .dialog-window {
   background-color: var(--ta-background-color);
-  border: 1px solid var(--ta-divider-color);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--ta-search-border-color);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
   color: var(--ta-ui-text-color);
   max-width: 520px;
   min-width: 320px;
@@ -1049,11 +1050,13 @@ input[type=search]:focus {
 
 .dialog-text {
   color: var(--ta-ui-text-color);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre-line;
+  word-break: break-word;
 }
 
 .dialog-buttons {
@@ -1068,7 +1071,7 @@ input[type=search]:focus {
 .dialog-button {
   align-items: center;
   background-color: var(--ta-accent-color);
-  border: 1px solid var(--ta-divider-color);
+  border: 1px solid var(--ta-search-button-divider-color);
   border-radius: 6px;
   color: var(--ta-ui-text-color);
   cursor: pointer;
@@ -1077,15 +1080,17 @@ input[type=search]:focus {
   font-size: 13px;
   font-weight: 500;
   height: 32px;
+  min-width: 64px;
+  justify-content: center;
   margin: 0;
-  opacity: 0.9;
+  opacity: 0.95;
   padding: 0 16px;
   transition: background-color 150ms ease, opacity 150ms ease, border-color 150ms ease;
 }
 
 .dialog-button:hover {
   background-color: var(--ta-highlight-color);
-  border-color: var(--ta-divider-color);
+  border-color: var(--ta-search-border-color);
   color: var(--ta-ui-highlight-text-color);
   opacity: 1;
 }

@@ -82,7 +82,7 @@ MenuController.prototype.addNewTab_ = function(e, opt_tab) {
   tabElement.appendChild(filenameElement);
   const closeElement = document.createElement('button');
   closeElement.textContent = 'close';
-  closeElement.setAttribute('title', chrome.i18n.getMessage('closeFileButton'));
+  closeElement.setAttribute('title', (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('closeFileButton')) || 'Close file');
   closeElement.classList.add('close', 'mdc-icon-button', 'material-icons');
   mdc.ripple.MDCRipple.attachTo(closeElement).unbounded = true;
   tabElement.appendChild(closeElement);

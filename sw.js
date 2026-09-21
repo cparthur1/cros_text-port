@@ -1,4 +1,4 @@
-const CACHE_NAME = 'text-app-v14';
+const CACHE_NAME = 'text-app-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -34,7 +34,12 @@ const ASSETS = [
   './third_party/material-components-web/material-components-web.min.js',
   './third_party/material-design-icons/iconfont/material-icons.css',
   './third_party/material-design-icons/iconfont/MaterialIcons-Regular.woff2',
-  './third_party/codemirror.next/codemirror.next.bin.js'
+  './third_party/codemirror.next/codemirror.next.bin.js',
+  './_locales/en/messages.json',
+  './_locales/pt_BR/messages.json',
+  './_locales/es/messages.json',
+  './_locales/fr/messages.json',
+  './_locales/de/messages.json'
 ];
 
 self.addEventListener('install', (event) => {

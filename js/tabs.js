@@ -211,7 +211,7 @@ Tab.prototype.reportWriteError_ = function(e) {
       'Error saving file: ' + util.fsErrorStr(e));
   this.dialogController_.resetButtons();
   this.dialogController_.addButton('ok',
-      chrome.i18n.getMessage('okDialogButton'));
+      (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('okDialogButton')) || 'OK');
   this.dialogController_.show();
 };
 
@@ -551,17 +551,20 @@ Tabs.prototype.promptAllUnsavedFromIndex_ = function(i, callback) {
  *     button selected by the user.
  */
 Tabs.prototype.promptSave_ = function(tab, callbackShowDialog) {
-  this.dialogController_.setText(
-      chrome.i18n.getMessage('saveFilePromptLine1', tab.getName()),
-      chrome.i18n.getMessage('saveFilePromptLine2')
-  );
+  var name = tab ? tab.getName() : 'document';
+  var line1 = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('saveFilePromptLine1', name)) ||
+      (name + ' has been modified.');
+  var line2 = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('saveFilePromptLine2')) ||
+      'Do you want to save it before closing?';
+
+  this.dialogController_.setText(line1, line2);
   this.dialogController_.resetButtons();
   this.dialogController_.addButton('yes',
-      chrome.i18n.getMessage('yesDialogButton'));
+      (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('yesDialogButton')) || 'Yes');
   this.dialogController_.addButton('no',
-      chrome.i18n.getMessage('noDialogButton'));
+      (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('noDialogButton')) || 'No');
   this.dialogController_.addButton('cancel',
-      chrome.i18n.getMessage('cancelDialogButton'));
+      (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('cancelDialogButton')) || 'Cancel');
   this.dialogController_.show(callbackShowDialog);
 };
 

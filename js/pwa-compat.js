@@ -164,7 +164,10 @@
     "fileMenuOpen": { "message": "Open" },
     "fileMenuSave": { "message": "Save" },
     "fileMenuSaveas": { "message": "Save as" },
+    "fileMenuSaveApp": { "message": "Save on the app" },
+    "appStorageSavedInApp": { "message": "Saved in App" },
     "menuSettings": { "message": "Settings" },
+    "hotbarStatus": { "message": "HotBar Status" },
     "menuShortcuts": { "message": "Keyboard shortcuts" },
     "autosaveSetting": { "message": "Auto save" },
     "fontsizeSetting": { "message": "Font size" },
@@ -184,21 +187,39 @@
     "openSidebarButton": { "message": "Open sidebar" },
     "closeSidebarButton": { "message": "Close sidebar" },
     "searchPlaceholder": { "message": "Find..." },
+    "searchCounting": {
+      "message": "$searchIndex$ of $searchCount$",
+      "placeholders": {
+        "searchIndex": { "content": "$1", "example": "Search index" },
+        "searchCount": { "content": "$2", "example": "Search count" }
+      }
+    },
     "searchNextButton": { "message": "Next" },
     "searchPreviousButton": { "message": "Previous" },
+    "errorTitle": { "message": "Error" },
+    "loadingTitle": { "message": "Loading..." },
+    "minimizeButton": { "message": "Minimize" },
+    "maximizeButton": { "message": "Maximize" },
+    "restoreButton": { "message": "Restore" },
+    "closeButton": { "message": "Quit" },
+    "yesDialogButton": { "message": "Yes" },
+    "noDialogButton": { "message": "No" },
+    "cancelDialogButton": { "message": "Cancel" },
+    "saveFilePromptLine1": {
+      "message": "$filename$ has been modified.",
+      "placeholders": {
+        "filename": { "content": "$1", "example": "file.txt" }
+      }
+    },
+    "saveFilePromptLine2": { "message": "Do you want to save it before closing?" },
+    "okDialogButton": { "message": "OK" },
+    "closeFileButton": { "message": "Close file" },
     "toggleReplaceButton": { "message": "Toggle replace (Ctrl+H)" },
     "replacePlaceholder": { "message": "Replace..." },
     "replaceButton": { "message": "Replace" },
     "replaceButtonTitle": { "message": "Replace (Enter)" },
     "replaceAllButton": { "message": "All" },
     "replaceAllButtonTitle": { "message": "Replace all" },
-    "errorTitle": { "message": "Error" },
-    "loadingTitle": { "message": "Loading..." },
-    "yesDialogButton": { "message": "Yes" },
-    "noDialogButton": { "message": "No" },
-    "cancelDialogButton": { "message": "Cancel" },
-    "okDialogButton": { "message": "OK" },
-    "closeFileButton": { "message": "Close file" },
     "savingIndicator": { "message": "Saving changes..." },
     "savedIndicator": { "message": "All changes saved" },
     "unsavedIndicator": { "message": "Unsaved changes - click to save" },
@@ -224,7 +245,16 @@
     var url = '_locales/' + lang + '/messages.json';
     fetch(url)
       .then(function(res) {
-        if (!res.ok) throw new Error('Locale not found: ' + lang);
+        if (!res.ok) {
+          if (lang.indexOf('_') > -1) {
+            var baseLang = lang.split('_')[0];
+            return fetch('_locales/' + baseLang + '/messages.json').then(function(r) {
+              if (!r.ok) throw new Error('Locale not found: ' + lang);
+              return r.json();
+            });
+          }
+          throw new Error('Locale not found: ' + lang);
+        }
         return res.json();
       })
       .then(function(data) {
@@ -251,11 +281,21 @@
   chrome.i18n.getMessage = function(messageName, substitutions) {
     var entry = messages[messageName];
     if (!entry) return '';
-    var message = entry.message;
-    if (substitutions) {
+    var message = entry.message || '';
+    if (substitutions !== undefined && substitutions !== null) {
       if (!Array.isArray(substitutions)) substitutions = [substitutions];
+      if (entry.placeholders) {
+        Object.keys(entry.placeholders).forEach(function(pKey) {
+          var ph = entry.placeholders[pKey];
+          var phContent = (ph && ph.content) ? ph.content : '$1';
+          substitutions.forEach(function(sub, i) {
+            phContent = phContent.split('$' + (i + 1)).join(String(sub));
+          });
+          message = message.split('$' + pKey + '$').join(phContent);
+        });
+      }
       substitutions.forEach(function(sub, i) {
-        message = message.replace('$' + (i + 1), sub);
+        message = message.split('$' + (i + 1)).join(String(sub));
       });
     }
     return message;

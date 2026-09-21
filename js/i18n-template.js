@@ -31,7 +31,10 @@ var i18nTemplate = (function() {
      * @param {string} key The name of the message in chrome.i18n.
      */
     'i18n-content': function(element, key) {
-      element.textContent = chrome.i18n.getMessage(key);
+      var msg = chrome.i18n.getMessage(key);
+      if (msg && msg.trim().length > 0) {
+        element.textContent = msg;
+      }
     },
 
     /**
@@ -60,6 +63,7 @@ var i18nTemplate = (function() {
         var propExpr = attributeAndKeyPair[2];
 
         var value = chrome.i18n.getMessage(propExpr);
+        if (!value) return;
 
         // Allow a property of the form '.foo.bar' to assign a value into
         // element.foo.bar.
