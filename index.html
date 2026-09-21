@@ -233,6 +233,12 @@
     <div id="main-container">
       <header>
         <button class="mdc-icon-button material-icons" id="toggle-sidebar" i18n-values="title:openSidebarButton;aria-label:openSidebarButton">menu</button>
+        <div id="title-filename">
+          <button id="autosave-indicator" class="autosave-indicator" title="All changes saved" aria-label="Autosave status" style="display: none;">
+            <img id="autosave-indicator-icon" class="autosave-indicator-icon" src="assets/autosaved.svg" alt="Autosave status">
+          </button>
+          <span id="title-filename-text"></span>
+        </div>
         <div id="search-anchor">
           <div class="search-container">
             <div class="search-row">
@@ -273,12 +279,6 @@
               </button>
             </div>
           </div>
-        </div>
-        <div id="title-filename">
-          <button id="autosave-indicator" class="autosave-indicator" title="All changes saved" aria-label="Autosave status" style="display: none;">
-            <img id="autosave-indicator-icon" class="autosave-indicator-icon" src="assets/autosaved.svg" alt="Autosave status">
-          </button>
-          <span id="title-filename-text"></span>
         </div>
       </header>
 
