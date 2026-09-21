@@ -129,6 +129,10 @@ HotkeysController.prototype.onKeydown_ = function(e) {
       var toggleBtn = document.getElementById('toggle-sidebar');
       if (toggleBtn) toggleBtn.click();
       return false;
+    } else if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      util.triggerEvent('opensymbols');
+      return false;
     }
   }
 };

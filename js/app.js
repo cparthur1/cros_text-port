@@ -111,6 +111,7 @@ TextApp.prototype.initControllers_ = function() {
       this.windowController_, this.tabs_, this.editor_, this.settings_,
       this.settingsController_);
   this.searchController_ = new SearchController(this.editor_.getSearch());
+  this.symbolsController_ = new SymbolsController(this.editor_);
 };
 
 /**

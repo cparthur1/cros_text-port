@@ -484,3 +484,30 @@ EditorCodeMirror.prototype.enable = function() {
     effects: this.editableCompartment_.reconfigure(window.CodeMirror.view.EditorView.editable.of(true))
   });
 };
+
+/**
+ * Inserts text at the current cursor position or replaces current selection.
+ * @param {string} text
+ */
+EditorCodeMirror.prototype.insertText = function(text) {
+  if (!this.editorView_ || typeof text !== 'string') return;
+  var view = this.editorView_;
+  var selection = view.state.selection.main;
+  view.dispatch({
+    changes: { from: selection.from, to: selection.to, insert: text },
+    selection: { anchor: selection.from + text.length },
+    scrollIntoView: true
+  });
+  view.focus();
+};
+
+/**
+ * Returns the currently selected text in the editor.
+ * @return {string}
+ */
+EditorCodeMirror.prototype.getSelectedText = function() {
+  if (!this.editorView_) return '';
+  var selection = this.editorView_.state.selection.main;
+  if (selection.empty) return '';
+  return this.editorView_.state.sliceDoc(selection.from, selection.to);
+};
