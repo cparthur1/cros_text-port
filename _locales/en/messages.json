@@ -169,6 +169,22 @@
     "message": "Cancel",
     "description": "The button text which says 'Cancel'."
   },
+  "deleteDialogButton": {
+    "message": "Delete",
+    "description": "The button text which says 'Delete'."
+  },
+  "saveToDeviceButton": {
+    "message": "Save to Device",
+    "description": "Button to save recovered file to device storage."
+  },
+  "saveOnAppButton": {
+    "message": "Save on App",
+    "description": "Button to save recovered file in app storage."
+  },
+  "keepInEditorButton": {
+    "message": "Keep in Editor",
+    "description": "Button to keep recovered file in editor without saving."
+  },
   "saveFilePromptLine1": {
     "message": "$filename$ has been modified.",
     "description": "The first line of the text which prompts the user to save a file before closing it. This line declares which file has been modified.",

@@ -31,6 +31,10 @@
     "message": "Configurações",
     "description": "O texto do Menu 'Configurações'."
   },
+  "hotbarStatus": {
+    "message": "Status do HotBar",
+    "description": "O texto do botão Status do HotBar na barra lateral."
+  },
   "menuShortcuts": {
     "message": "Atalhos do teclado",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
@@ -164,6 +168,22 @@
   "cancelDialogButton": {
     "message": "Cancelar",
     "description": "O texto do botão que diz 'Cancelar'."
+  },
+  "deleteDialogButton": {
+    "message": "Excluir",
+    "description": "O texto do botão que diz 'Excluir'."
+  },
+  "saveToDeviceButton": {
+    "message": "Salvar no dispositivo",
+    "description": "Botão para salvar arquivo recuperado no dispositivo."
+  },
+  "saveOnAppButton": {
+    "message": "Salvar no app",
+    "description": "Botão para salvar arquivo recuperado no app."
+  },
+  "keepInEditorButton": {
+    "message": "Manter no editor",
+    "description": "Botão para manter arquivo recuperado no editor."
   },
   "saveFilePromptLine1": {
     "message": "O arquivo $filename$ foi modificado.",

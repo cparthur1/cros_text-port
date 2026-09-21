@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "모두 바꾸기",
     "description": "모두 바꾸기 버튼의 도움말 풍선입니다."
+  },
+  "fileMenuSaveApp": {
+    "message": "Save on the app"
+  },
+  "appStorageSavedInApp": {
+    "message": "Saved in App"
+  },
+  "hotbarStatus": {
+    "message": "HotBar Status"
+  },
+  "deleteDialogButton": {
+    "message": "Delete"
+  },
+  "saveToDeviceButton": {
+    "message": "Save to Device"
+  },
+  "saveOnAppButton": {
+    "message": "Save on App"
+  },
+  "keepInEditorButton": {
+    "message": "Keep in Editor"
   }
 }

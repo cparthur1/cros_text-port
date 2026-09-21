@@ -205,6 +205,10 @@
     "yesDialogButton": { "message": "Yes" },
     "noDialogButton": { "message": "No" },
     "cancelDialogButton": { "message": "Cancel" },
+    "deleteDialogButton": { "message": "Delete" },
+    "saveToDeviceButton": { "message": "Save to Device" },
+    "saveOnAppButton": { "message": "Save on App" },
+    "keepInEditorButton": { "message": "Keep in Editor" },
     "saveFilePromptLine1": {
       "message": "$filename$ has been modified.",
       "placeholders": {
@@ -233,6 +237,7 @@
     "fileReloadedToast": { "message": "$1 reloaded (modified externally)" },
     "saveFilenamePrompt": { "message": "Save file as:" }
   };
+  var defaultMessages = Object.assign({}, messages);
   var locale = navigator.language.replace('-', '_');
   var defaultLocale = 'en';
 
@@ -246,6 +251,12 @@
     fetch(url)
       .then(function(res) {
         if (!res.ok) {
+          if (lang === 'pt') {
+            return fetch('_locales/pt_BR/messages.json').then(function(r) {
+              if (!r.ok) throw new Error('Locale not found: pt_BR');
+              return r.json();
+            });
+          }
           if (lang.indexOf('_') > -1) {
             var baseLang = lang.split('_')[0];
             return fetch('_locales/' + baseLang + '/messages.json').then(function(r) {
@@ -279,9 +290,10 @@
   });
 
   chrome.i18n.getMessage = function(messageName, substitutions) {
-    var entry = messages[messageName];
+    var entry = messages[messageName] || defaultMessages[messageName];
     if (!entry) return '';
-    var message = entry.message || '';
+    var message = (entry && entry.message) ? entry.message : (defaultMessages[messageName] ? defaultMessages[messageName].message : '');
+    if (!message) return '';
     if (substitutions !== undefined && substitutions !== null) {
       if (!Array.isArray(substitutions)) substitutions = [substitutions];
       if (entry.placeholders) {

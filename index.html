@@ -46,38 +46,25 @@
             <button
                 id="file-menu-new"
                 class="sidebar-button"
-                i18n-content="fileMenuNew">
-            </button>
+                i18n-content="fileMenuNew">New</button>
           </li>
           <li>
             <button
                 id="file-menu-open"
                 class="sidebar-button"
-                i18n-content="fileMenuOpen">
-            </button>
+                i18n-content="fileMenuOpen">Open</button>
           </li>
           <li>
             <button
                 id="file-menu-save"
                 class="sidebar-button"
-                i18n-content="fileMenuSave">
-            </button>
+                i18n-content="fileMenuSave">Save</button>
           </li>
           <li>
             <button
                 id="file-menu-saveas"
                 class="sidebar-button"
-                i18n-content="fileMenuSaveas">
-            </button>
-          </li>
-          <li>
-            <button
-                id="file-menu-saveapp"
-                class="sidebar-button"
-                title="Save current file to WebApp Storage (max 5 saves, 1MB each)">
-              <span class="file-menu-icon material-icons">save</span>
-              <span i18n-content="fileMenuSaveApp">Save on the app</span>
-            </button>
+                i18n-content="fileMenuSaveas">Save as</button>
           </li>
           <li id="app-storage-folder-item" class="app-storage-folder-item">
             <button
@@ -113,16 +100,13 @@
             <button
                 id="open-hotbar"
                 class="sidebar-button"
-                i18n-content="hotbarStatus">
-              HotBar Status
-            </button>
+                i18n-content="hotbarStatus">HotBar Status</button>
           </li>
           <li>
             <button
                 id="open-settings"
                 class="sidebar-button"
-                i18n-content="menuSettings">
-            </button>
+                i18n-content="menuSettings">Settings</button>
           </li>
         </ul>
       </div>
@@ -376,9 +360,13 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then(registration => {
           console.log('SW registered: ', registration);
+          registration.update();
         }).catch(registrationError => {
           console.log('SW registration failed: ', registrationError);
         });
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
       });
     }
     

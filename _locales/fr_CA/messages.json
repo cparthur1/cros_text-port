@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "Tout remplacer",
     "description": "Info-bulle du bouton tout remplacer."
+  },
+  "fileMenuSaveApp": {
+    "message": "Enregistrer dans l'application"
+  },
+  "appStorageSavedInApp": {
+    "message": "Enregistré dans l'app"
+  },
+  "hotbarStatus": {
+    "message": "État de la barre rapide"
+  },
+  "deleteDialogButton": {
+    "message": "Supprimer"
+  },
+  "saveToDeviceButton": {
+    "message": "Enregistrer sur l'appareil"
+  },
+  "saveOnAppButton": {
+    "message": "Enregistrer dans l'app"
+  },
+  "keepInEditorButton": {
+    "message": "Garder dans l'éditeur"
   }
 }

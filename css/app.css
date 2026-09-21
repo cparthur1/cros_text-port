@@ -1095,6 +1095,12 @@ input[type=search]:focus {
   opacity: 1;
 }
 
+.dialog-button#delete:hover {
+  background-color: rgba(229, 115, 115, 0.15);
+  border-color: rgba(229, 115, 115, 0.5);
+  color: #e57373;
+}
+
 .dialog-button:focus-visible {
   outline: 2px solid var(--mdc-theme-secondary);
 }
@@ -1710,17 +1716,18 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   filter: brightness(1.1);
 }
 
-/* App Storage ("Save on the app" & In-App Folder) */
-#file-menu-saveapp .file-menu-icon {
-  font-size: 18px;
-  margin-right: 12px;
-  opacity: 0.75;
-}
-
+/* App Storage (In-App Folder) */
 .app-storage-folder-item {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+#sidebar li.app-storage-folder-item.open,
+#sidebar li.app-storage-folder-item.open:hover,
+.app-storage-folder-item.open > .app-folder-button:hover {
+  background-color: transparent !important;
+  color: inherit !important;
 }
 
 .app-folder-button {
@@ -1738,6 +1745,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 
 .app-folder-label {
   flex-grow: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "Reemplazar todo",
     "description": "Información sobre herramientas para el botón reemplazar todo."
+  },
+  "fileMenuSaveApp": {
+    "message": "Guardar en la app"
+  },
+  "appStorageSavedInApp": {
+    "message": "Guardado en la app"
+  },
+  "hotbarStatus": {
+    "message": "Estado de HotBar"
+  },
+  "deleteDialogButton": {
+    "message": "Eliminar"
+  },
+  "saveToDeviceButton": {
+    "message": "Guardar en dispositivo"
+  },
+  "saveOnAppButton": {
+    "message": "Guardar en app"
+  },
+  "keepInEditorButton": {
+    "message": "Mantener en editor"
   }
 }

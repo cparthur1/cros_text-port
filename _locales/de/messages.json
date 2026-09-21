@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "Alle ersetzen",
     "description": "Tooltip für die Schaltfläche 'Alle ersetzen'."
+  },
+  "fileMenuSaveApp": {
+    "message": "In der App speichern"
+  },
+  "appStorageSavedInApp": {
+    "message": "In App gespeichert"
+  },
+  "hotbarStatus": {
+    "message": "HotBar-Status"
+  },
+  "deleteDialogButton": {
+    "message": "Löschen"
+  },
+  "saveToDeviceButton": {
+    "message": "Auf Gerät speichern"
+  },
+  "saveOnAppButton": {
+    "message": "In App speichern"
+  },
+  "keepInEditorButton": {
+    "message": "Im Editor behalten"
   }
 }

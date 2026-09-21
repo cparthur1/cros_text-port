@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "Sostituisci tutto",
     "description": "Descrizione comando per il pulsante sostituisci tutto."
+  },
+  "fileMenuSaveApp": {
+    "message": "Salva nell'app"
+  },
+  "appStorageSavedInApp": {
+    "message": "Salvato nell'app"
+  },
+  "hotbarStatus": {
+    "message": "Stato HotBar"
+  },
+  "deleteDialogButton": {
+    "message": "Elimina"
+  },
+  "saveToDeviceButton": {
+    "message": "Salva sul dispositivo"
+  },
+  "saveOnAppButton": {
+    "message": "Salva nell'app"
+  },
+  "keepInEditorButton": {
+    "message": "Mantieni nell'editor"
   }
 }

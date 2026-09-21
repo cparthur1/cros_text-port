@@ -198,5 +198,26 @@
   "replaceAllButtonTitle": {
     "message": "全部替换",
     "description": "全部替换按钮的提示文本。"
+  },
+  "fileMenuSaveApp": {
+    "message": "Save on the app"
+  },
+  "appStorageSavedInApp": {
+    "message": "Saved in App"
+  },
+  "hotbarStatus": {
+    "message": "HotBar Status"
+  },
+  "deleteDialogButton": {
+    "message": "Delete"
+  },
+  "saveToDeviceButton": {
+    "message": "Save to Device"
+  },
+  "saveOnAppButton": {
+    "message": "Save on App"
+  },
+  "keepInEditorButton": {
+    "message": "Keep in Editor"
   }
 }

@@ -202,5 +202,26 @@
   "replaceAllButtonTitle": {
     "message": "Alles vervangen",
     "description": "Knopinfo voor de knop alles vervangen."
+  },
+  "fileMenuSaveApp": {
+    "message": "Save on the app"
+  },
+  "appStorageSavedInApp": {
+    "message": "Saved in App"
+  },
+  "hotbarStatus": {
+    "message": "HotBar Status"
+  },
+  "deleteDialogButton": {
+    "message": "Delete"
+  },
+  "saveToDeviceButton": {
+    "message": "Save to Device"
+  },
+  "saveOnAppButton": {
+    "message": "Save on App"
+  },
+  "keepInEditorButton": {
+    "message": "Keep in Editor"
   }
 }

@@ -45,17 +45,12 @@ AppStorageController.TEMP_SAVE_KEY = 'temp_active_tab';
  * @private
  */
 AppStorageController.prototype.initElements_ = function() {
-  this.saveAppBtn_ = document.getElementById('file-menu-saveapp');
   this.appFolderBtn_ = document.getElementById('file-menu-appfolder');
   this.appFolderItem_ = document.getElementById('app-storage-folder-item');
   this.folderContent_ = document.getElementById('app-storage-folder-content');
   this.fileListEl_ = document.getElementById('app-storage-file-list');
   this.countBadge_ = document.getElementById('app-storage-count');
   this.saveCurrentBtn_ = document.getElementById('app-storage-save-current');
-
-  if (this.saveAppBtn_) {
-    this.saveAppBtn_.addEventListener('click', this.saveActiveTabToApp.bind(this));
-  }
 
   if (this.appFolderBtn_) {
     this.appFolderBtn_.addEventListener('click', () => this.toggleFolder());
@@ -712,12 +707,28 @@ AppStorageController.prototype.showRecoveryPrompt_ = function(tempRecord) {
       'Would you like to save it to your device storage now?'
   );
 
+  const saveDeviceTxt = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('saveToDeviceButton')) || 'Save to Device';
+  const saveAppTxt = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('saveOnAppButton')) || 'Save on App';
+  const keepEditorTxt = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('keepInEditorButton')) || 'Keep in Editor';
+  const deleteTxt = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('deleteDialogButton')) || 'Delete';
+
   this.dialogController_.resetButtons();
-  this.dialogController_.addButton('save-device', 'Save to Device');
-  this.dialogController_.addButton('keep-app', 'Save on App');
-  this.dialogController_.addButton('dismiss', 'Keep in Editor');
+  this.dialogController_.addButton('save-device', saveDeviceTxt);
+  this.dialogController_.addButton('keep-app', saveAppTxt);
+  this.dialogController_.addButton('dismiss', keepEditorTxt);
+  this.dialogController_.addButton('delete', deleteTxt);
 
   this.dialogController_.show((choice) => {
+    if (choice === 'delete') {
+      this.clearTempSave_();
+      const recoveredTab = this.tabs_.tabs_.find((t) => t.getContent_() === tempRecord.content);
+      if (recoveredTab) {
+        this.tabs_.closeTab_(recoveredTab);
+      }
+      util.showToast('Unsaved file deleted.');
+      return;
+    }
+
     // Open a recovered tab if not already open
     let recoveredTab = this.tabs_.tabs_.find((t) => t.getContent_() === tempRecord.content);
     if (!recoveredTab) {
