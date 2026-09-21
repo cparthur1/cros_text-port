@@ -33,11 +33,15 @@ util.handleFSError = function(e) {
  * @param {string} content
  * @param {Function} onsuccess
  * @param {Function?} opt_onerror
+ * @param {boolean=} opt_isAutosave
  * Truncate the file and write the content.
  */
-util.writeFile = function(entry, content, onsuccess, opt_onerror) {
+util.writeFile = function(entry, content, onsuccess, opt_onerror, opt_isAutosave) {
   var blob = new Blob([content], {type: 'text/plain'});
   entry.createWriter(function(writer) {
+    if (opt_isAutosave) {
+      writer.isAutosave = true;
+    }
     writer.onerror = opt_onerror ? opt_onerror : util.handleFSError;
     writer.onwrite = util.writeToWriter_.bind(null, writer, blob, onsuccess);
     writer.truncate(blob.size);

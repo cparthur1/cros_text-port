@@ -482,7 +482,7 @@ WindowController.prototype.isDraggingFiles_ = function(e) {
     return false;
   }
   for (var i = 0; i < types.length; i++) {
-    if (types[i] === 'Files') return true;
+    if (types[i] === 'Files' || types[i] === 'public.file-url') return true;
   }
   return false;
 };
@@ -541,7 +541,8 @@ WindowController.prototype.openDroppedFileFallback_ = function(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var content = e.target.result;
-    var tab = self.tabs_.newTab(content, null, false, file.name);
+    var entry = new window.FileEntryPolyfill(null, null, file, file.name);
+    var tab = self.tabs_.newTab(content, entry, false, file.name);
     tab.lineEndings_ = util.guessLineEndings(content);
     tab.lastModified_ = file.lastModified;
 

@@ -26,6 +26,7 @@ HotkeysController.prototype.onKeydown_ = function(e) {
   if (e.ctrlKey || e.metaKey) {
     switch (e.key) {
       case 'Tab':
+        e.preventDefault();
         if (e.shiftKey) {
           this.tabs_.previousTab();
         } else {
@@ -35,25 +36,30 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case 'e':
       case 'E':
+        e.preventDefault();
         // Focus the first button in the sidebar. This includes opening
         // the sidebar and closing settings if needed.
         this.windowController_.openSidebar();
         this.settingsController_.closeSettings();
-        document.querySelector('.sidebar-button').focus();
+        var firstBtn = document.querySelector('.sidebar-button');
+        if (firstBtn) firstBtn.focus();
         return false;
 
       case 'f':
       case 'F':
+        e.preventDefault();
         util.triggerEvent('opensearch');
         return false;
 
       case 'h':
       case 'H':
+        e.preventDefault();
         util.triggerEvent('openreplace');
         return false;
 
       case 'n':
       case 'N':
+        e.preventDefault();
         if (e.shiftKey) {
           this.tabs_.newWindow();
         } else {
@@ -63,16 +69,19 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case 'o':
       case 'O':
+        e.preventDefault();
         this.tabs_.openFiles();
         return false;
 
       case 'p':
       case 'P':
+        e.preventDefault();
         window.print();
         return false;
 
       case 's':
       case 'S':
+        e.preventDefault();
         if (e.shiftKey) {
           this.tabs_.saveAs();
         }
@@ -83,6 +92,7 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case 'w':
       case 'W':
+        e.preventDefault();
         if (e.shiftKey) {
           this.windowController_.close();
         } else {
@@ -92,17 +102,20 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case '0':
       case ')':
+        e.preventDefault();
         this.settings_.reset('fontsize');
         return false;
 
       case '+':
       case '=':
+        e.preventDefault();
         var fontSize = this.settings_.get('fontsize');
         this.settings_.set('fontsize', fontSize * this.ZOOM_IN_FACTOR);
         return false;
 
       case '-':
       case '_':
+        e.preventDefault();
         var fontSize = this.settings_.get('fontsize');
         this.settings_.set('fontsize', fontSize * this.ZOOM_OUT_FACTOR);
         return false;
@@ -112,6 +125,7 @@ HotkeysController.prototype.onKeydown_ = function(e) {
     }
   } else if (e.altKey) {
     if (e.key === ' ') {
+      e.preventDefault();
       var toggleBtn = document.getElementById('toggle-sidebar');
       if (toggleBtn) toggleBtn.click();
       return false;

@@ -201,7 +201,8 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
       }
 
       callbacks.forEach(function(cb) { cb(); });
-    }.bind(this));
+    }.bind(this),
+    opt_isAutosave);
 };
 
 Tab.prototype.reportWriteError_ = function(e) {
@@ -843,6 +844,7 @@ Tabs.prototype.saveSession_ = function() {
       name: tab.getName(),
       path: tab.getPath(),
       hasEntry: !!entry || (tab.isMissing() && tab.getName().indexOf('Untitled ') !== 0),
+      isFallback: !!(entry && entry.isFallback),
       handleId: handleId,
       content: (content && content.length < 2000000) ? content : '',
       saved: tab.isSaved(),
@@ -907,7 +909,10 @@ Tabs.prototype.restoreSession_ = async function() {
       var content = tabData.content || '';
 
       if (tabData.hasEntry) {
-        if (tabData.handleId && window.chrome && window.chrome.fileSystem && window.chrome.fileSystem.getStoredHandle) {
+        if (tabData.isFallback) {
+          entry = new window.FileEntryPolyfill(null, tabData.handleId, null, tabData.name);
+          isMissing = false;
+        } else if (tabData.handleId && window.chrome && window.chrome.fileSystem && window.chrome.fileSystem.getStoredHandle) {
           try {
             var handle = await window.chrome.fileSystem.getStoredHandle(tabData.handleId);
             if (handle) {

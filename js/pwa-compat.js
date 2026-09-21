@@ -211,7 +211,8 @@
     "externalModificationPromptLine2": { "message": "Do you want to reload it and lose your unsaved changes?" },
     "reloadDialogButton": { "message": "Reload" },
     "keepLocalDialogButton": { "message": "Keep Local Changes" },
-    "fileReloadedToast": { "message": "$1 reloaded (modified externally)" }
+    "fileReloadedToast": { "message": "$1 reloaded (modified externally)" },
+    "saveFilenamePrompt": { "message": "Save file as:" }
   };
   var locale = navigator.language.replace('-', '_');
   var defaultLocale = 'en';
@@ -325,12 +326,14 @@
   chrome.fileSystem.storeHandle = storeHandle;
   chrome.fileSystem.getStoredHandle = retrieveHandle;
 
-  function FileEntryPolyfill(handle, opt_id) {
-    this.handle = handle;
-    this.name = handle ? handle.name : '';
-    this.isFile = handle ? handle.kind === 'file' : true;
-    this.isDirectory = handle ? handle.kind === 'directory' : false;
-    this.handleId = opt_id || ('handle_' + (handle ? handle.name.replace(/[^a-zA-Z0-9_-]/g, '_') : 'file') + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+  function FileEntryPolyfill(handle, opt_id, opt_file, opt_name) {
+    this.handle = handle || null;
+    this.fileObj = opt_file || null;
+    this.name = (handle && handle.name) || opt_name || (opt_file && opt_file.name) || 'untitled.txt';
+    this.isFile = true;
+    this.isDirectory = false;
+    this.isFallback = !handle;
+    this.handleId = opt_id || ('handle_' + (this.name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'file') + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
     if (this.handle) {
       storeHandle(this.handleId, this.handle);
     }
@@ -338,14 +341,18 @@
   window.FileEntryPolyfill = FileEntryPolyfill;
 
   FileEntryPolyfill.prototype.file = function(callback) {
-    if (!this.handle) {
-      callback(null);
-      return;
+    if (this.handle) {
+      this.handle.getFile().then(callback).catch(function(err) {
+        console.warn('Could not read file from handle:', err);
+        callback(null);
+      });
+    } else if (this.fileObj) {
+      callback(this.fileObj);
+    } else {
+      var f = new File([], this.name, { type: 'text/plain', lastModified: Date.now() });
+      this.fileObj = f;
+      callback(f);
     }
-    this.handle.getFile().then(callback).catch(function(err) {
-      console.warn('Could not read file from handle:', err);
-      callback(null);
-    });
   };
 
   FileEntryPolyfill.prototype.createWriter = function(callback) {
@@ -353,63 +360,173 @@
     var writer = {
       onerror: null,
       onwrite: null,
+      isAutosave: false,
       truncate: function(size) {
         this.write_requested_size = size;
         if (this.onwrite) this.onwrite();
       },
       write: function(blob) {
-        if (!self.handle) {
-          if (writer.onerror) writer.onerror(new Error('No file handle'));
-          return;
-        }
-        self.handle.createWritable().then(function(writable) {
-          writable.write(blob).then(function() {
-            writable.close().then(function() {
-              if (writer.onwrite) writer.onwrite();
+        if (self.handle) {
+          self.handle.createWritable().then(function(writable) {
+            writable.write(blob).then(function() {
+              writable.close().then(function() {
+                if (writer.onwrite) writer.onwrite();
+              });
             });
+          }).catch(function(err) {
+            if (writer.onerror) writer.onerror(err);
           });
-        }).catch(function(err) {
-          if (writer.onerror) writer.onerror(err);
-        });
+        } else {
+          // Safari / Firefox / non-Chromium fallback
+          var modTime = Date.now();
+          self.fileObj = new File([blob], self.name, {
+            type: blob.type || 'text/plain',
+            lastModified: modTime
+          });
+          // Only trigger browser file download for user-initiated explicit save (not automatic background autosave)
+          if (!writer.isAutosave) {
+            try {
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = url;
+              a.download = self.name || 'document.txt';
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(function() {
+                if (a.parentNode) {
+                  document.body.removeChild(a);
+                }
+                URL.revokeObjectURL(url);
+              }, 1500);
+            } catch (e) {
+              console.warn('Fallback download trigger error:', e);
+            }
+          }
+          if (writer.onwrite) {
+            writer.onwrite();
+          }
+        }
       }
     };
     callback(writer);
   };
 
+  function openFileInputFallback(options, callback) {
+    if (options && options.mockFiles && options.mockFiles.length) {
+      var mockEntries = options.mockFiles.map(function(f) {
+        return new FileEntryPolyfill(null, null, f, f.name);
+      });
+      callback(options.acceptsMultiple ? mockEntries : mockEntries[0]);
+      return;
+    }
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = !!options.acceptsMultiple;
+    input.style.position = 'fixed';
+    input.style.top = '-1000px';
+    input.style.left = '-1000px';
+    input.style.opacity = '0';
+    input.tabIndex = -1;
+    document.body.appendChild(input);
+
+    var handled = false;
+    function cleanup() {
+      if (input.parentNode) {
+        document.body.removeChild(input);
+      }
+    }
+
+    input.addEventListener('change', function() {
+      handled = true;
+      var files = Array.from(input.files || []);
+      cleanup();
+      if (!files.length) {
+        callback();
+        return;
+      }
+      var entries = files.map(function(file) {
+        return new FileEntryPolyfill(null, null, file, file.name);
+      });
+      callback(options.acceptsMultiple ? entries : entries[0]);
+    });
+
+    input.addEventListener('cancel', function() {
+      handled = true;
+      cleanup();
+      callback();
+    });
+
+    window.addEventListener('focus', function onFocus() {
+      window.removeEventListener('focus', onFocus);
+      setTimeout(function() {
+        if (!handled) {
+          cleanup();
+          callback();
+        }
+      }, 1000);
+    }, { once: true });
+
+    input.click();
+  }
+
+  function saveFilePickerFallback(options, callback) {
+    var defaultName = options.suggestedName || 'untitled.txt';
+    var promptMsg = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('saveFilenamePrompt')) ||
+                    'Save file as:';
+    var fileName = window.prompt(promptMsg, defaultName);
+    if (!fileName || !fileName.trim()) {
+      callback();
+      return;
+    }
+    fileName = fileName.trim();
+    var entry = new FileEntryPolyfill(null, null, null, fileName);
+    callback(entry);
+  }
+
   chrome.fileSystem.chooseEntry = function(options, callback) {
     if (options.type === 'openFile' || options.type === 'openWritableFile') {
-      window.showOpenFilePicker({
-        multiple: options.acceptsMultiple || false
-      }).then(async function(handles) {
-        if (options.type === 'openWritableFile') {
-          for (var i = 0; i < handles.length; i++) {
-            try {
-              if (handles[i].requestPermission) {
-                var perm = await handles[i].queryPermission({ mode: 'readwrite' });
-                if (perm !== 'granted') {
-                  await handles[i].requestPermission({ mode: 'readwrite' });
+      if (typeof window.showOpenFilePicker === 'function') {
+        window.showOpenFilePicker({
+          multiple: options.acceptsMultiple || false
+        }).then(async function(handles) {
+          if (options.type === 'openWritableFile') {
+            for (var i = 0; i < handles.length; i++) {
+              try {
+                if (handles[i].requestPermission) {
+                  var perm = await handles[i].queryPermission({ mode: 'readwrite' });
+                  if (perm !== 'granted') {
+                    await handles[i].requestPermission({ mode: 'readwrite' });
+                  }
                 }
+              } catch (e) {
+                console.warn('Could not query/request readwrite permission:', e);
               }
-            } catch (e) {
-              console.warn('Could not query/request readwrite permission:', e);
             }
           }
-        }
-        var entries = handles.map(function(h) { return new FileEntryPolyfill(h); });
-        callback(options.acceptsMultiple ? entries : entries[0]);
-      }).catch(function(err) {
-        console.log('User cancelled or error:', err);
-        callback();
-      });
+          var entries = handles.map(function(h) { return new FileEntryPolyfill(h); });
+          callback(options.acceptsMultiple ? entries : entries[0]);
+        }).catch(function(err) {
+          console.log('User cancelled or error:', err);
+          callback();
+        });
+      } else {
+        openFileInputFallback(options, callback);
+      }
     } else if (options.type === 'saveFile') {
-      window.showSaveFilePicker({
-        suggestedName: options.suggestedName
-      }).then(function(handle) {
-        callback(new FileEntryPolyfill(handle));
-      }).catch(function(err) {
-        console.log('User cancelled or error:', err);
-        callback();
-      });
+      if (typeof window.showSaveFilePicker === 'function') {
+        window.showSaveFilePicker({
+          suggestedName: options.suggestedName
+        }).then(function(handle) {
+          callback(new FileEntryPolyfill(handle));
+        }).catch(function(err) {
+          console.log('User cancelled or error:', err);
+          callback();
+        });
+      } else {
+        saveFilePickerFallback(options, callback);
+      }
     }
   };
 

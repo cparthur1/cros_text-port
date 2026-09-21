@@ -246,5 +246,9 @@
   "fileReloadedToast": {
     "message": "$1 reloaded (modified externally)",
     "description": "Toast notification when clean file is reloaded from disk."
+  },
+  "saveFilenamePrompt": {
+    "message": "Save file as:",
+    "description": "Prompt for filename in non-Chromium fallback."
   }
 }
