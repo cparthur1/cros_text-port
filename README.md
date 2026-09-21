@@ -11,6 +11,7 @@ While the original project is archived and was designed specifically for Chrome 
 *   **Installable**: Works as a standalone app on Windows, macOS, Linux, and Chrome OS via PWA installation.
 *   **Offline Support**: Fully functional without an internet connection using Service Workers.
 *   **Modern File System Access**: Uses the **File System Access API** to open and save local files directly from your browser.
+*   **Auto Save**: Automatically saves open files in the background as you edit with debounce and tab/window synchronization.
 *   **Storage**: Persists your settings and theme preferences using local storage polyfills.
 *   **i18n Support**: Dynamic localization with fallback for local `file://` usage.
 

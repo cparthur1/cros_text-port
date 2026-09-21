@@ -5,21 +5,23 @@ var util = {};
  * @return {string} Human-readable error description.
  */
 util.fsErrorStr = function(e) {
-  switch (e.code) {
-    case FileError.QUOTA_EXCEEDED_ERR:
-      return 'Quota exceeded';
-    case FileError.NOT_FOUND_ERR:
-      return 'File not found';
-    case FileError.SECURITY_ERR:
-      return 'Security error';
-    case FileError.INVALID_MODIFICATION_ERR:
-      return 'Invalid modification';
-    case FileError.INVALID_STATE_ERR:
-      return 'Invalid state';
-    default:
-      return 'Unknown Error';
+  if (!e) return 'Unknown Error';
+  if (typeof FileError !== 'undefined' && e.code) {
+    switch (e.code) {
+      case FileError.QUOTA_EXCEEDED_ERR:
+        return 'Quota exceeded';
+      case FileError.NOT_FOUND_ERR:
+        return 'File not found';
+      case FileError.SECURITY_ERR:
+        return 'Security error';
+      case FileError.INVALID_MODIFICATION_ERR:
+        return 'Invalid modification';
+      case FileError.INVALID_STATE_ERR:
+        return 'Invalid state';
+    }
   }
-}
+  return e.message || e.name || 'Unknown Error';
+};
 
 util.handleFSError = function(e) {
   $.event.trigger('filesystemerror');

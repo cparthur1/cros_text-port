@@ -27,6 +27,10 @@
     "message": "Pikanäppäimet",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Automaattinen tallennus",
+    "description": "Automaattinen tallennus -asetuksen teksti."
+  },
   "fontsizeSetting": {
     "message": "Kirjasinkoko",
     "description": "The text of the settings 'Font size'."

@@ -90,10 +90,16 @@ SettingsController.prototype.show_ = function(key, value) {
  * @private
  */
 SettingsController.prototype.setSwitch_ = function(key, value) {
-  document.getElementById('setting-' + key).toggleAttribute('checked', value);
-  document.getElementById('setting-' + key + '-switch').classList
-      .toggle('mdc-switch--checked', value);
-}
+  var input = document.getElementById('setting-' + key);
+  if (input) {
+    input.checked = !!value;
+    input.toggleAttribute('checked', !!value);
+  }
+  var switchEl = document.getElementById('setting-' + key + '-switch');
+  if (switchEl) {
+    switchEl.classList.toggle('mdc-switch--checked', !!value);
+  }
+};
 
 SettingsController.prototype.onSettingChange_ = function(e, key, value) {
   this.show_(key, value);

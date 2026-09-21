@@ -27,6 +27,10 @@
     "message": "Atalhos do teclado",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Salvar automaticamente",
+    "description": "O texto das configurações 'Salvar automaticamente'."
+  },
   "fontsizeSetting": {
     "message": "Tamanho da fonte",
     "description": "O texto das configurações 'Tamanho da fonte'."

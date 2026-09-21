@@ -17,6 +17,9 @@ function Tab(id, session, lineEndings, entry, dialogController) {
   this.path_ = null;
   this.dialogController_ = dialogController;
   this.autoSaveTimeout_ = null;
+  this.isSaving_ = false;
+  this.savePending_ = false;
+  this.pendingSaveCallbacks_ = [];
   if (this.entry_)
     this.updatePath_();
 };
@@ -86,20 +89,61 @@ Tab.prototype.getContent_ = function() {
   return this.session_.doc.toString().split('\n').join(this.lineEndings_);
 };
 
-Tab.prototype.save = function(opt_callbackDone) {
+Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
   if (this.autoSaveTimeout_) {
     clearTimeout(this.autoSaveTimeout_);
     this.autoSaveTimeout_ = null;
   }
+
+  if (this.isSaving_) {
+    this.savePending_ = true;
+    if (opt_callbackDone) {
+      this.pendingSaveCallbacks_.push(opt_callbackDone);
+    }
+    return;
+  }
+
+  this.isSaving_ = true;
+  var contentToSave = this.getContent_();
+
   util.writeFile(
-    this.entry_, this.getContent_(),
+    this.entry_, contentToSave,
     function() {
-      this.saved_ = true;
-      $.event.trigger('tabsave', this);
-      if (opt_callbackDone)
-        opt_callbackDone();
+      this.isSaving_ = false;
+
+      var callbacks = this.pendingSaveCallbacks_.slice();
+      this.pendingSaveCallbacks_ = [];
+      if (opt_callbackDone) {
+        callbacks.push(opt_callbackDone);
+      }
+
+      if (this.savePending_) {
+        this.savePending_ = false;
+        this.save(function() {
+          callbacks.forEach(function(cb) { cb(); });
+        }, opt_isAutosave);
+      } else {
+        if (this.getContent_() === contentToSave) {
+          this.saved_ = true;
+          $.event.trigger('tabsave', this);
+        }
+        callbacks.forEach(function(cb) { cb(); });
+      }
     }.bind(this),
-    this.reportWriteError_.bind(this));
+    function(e) {
+      this.isSaving_ = false;
+      this.savePending_ = false;
+      var callbacks = this.pendingSaveCallbacks_.slice();
+      this.pendingSaveCallbacks_ = [];
+
+      if (!opt_isAutosave) {
+        this.reportWriteError_(e);
+      } else {
+        console.warn('Autosave error for ' + this.getName() + ':', e);
+      }
+
+      callbacks.forEach(function(cb) { cb(); });
+    }.bind(this));
 };
 
 Tab.prototype.reportWriteError_ = function(e) {
@@ -141,6 +185,21 @@ function Tabs(editor, dialogController, settings) {
   $(document).bind('docchange', this.onDocChanged_.bind(this));
   $(document).bind('settingschange', this.onSettingsChanged_.bind(this));
   $(window).bind('blur', this.onWindowBlur_.bind(this));
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+      this.onWindowBlur_();
+    }
+  }.bind(this));
+  window.addEventListener('beforeunload', function(e) {
+    if (this.settings_.get('autosave')) {
+      this.onWindowBlur_();
+    }
+    if (this.hasUnsavedTabs()) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  }.bind(this));
 }
 
 /**
@@ -275,7 +334,7 @@ Tabs.prototype.showTab = function(tabId) {
         clearTimeout(this.currentTab_.autoSaveTimeout_);
         this.currentTab_.autoSaveTimeout_ = null;
       }
-      this.currentTab_.save();
+      this.save(this.currentTab_, null, true);
     }
   }
 
@@ -309,7 +368,7 @@ Tabs.prototype.close = function(tabId) {
         clearTimeout(tab.autoSaveTimeout_);
         tab.autoSaveTimeout_ = null;
       }
-      tab.save(this.closeTab_.bind(this, tab));
+      this.save(tab, this.closeTab_.bind(this, tab));
       return;
     }
     this.promptSave_(tab, function(answer) {
@@ -388,7 +447,7 @@ Tabs.prototype.promptAllUnsavedFromIndex_ = function(i, callback) {
       clearTimeout(tab.autoSaveTimeout_);
       tab.autoSaveTimeout_ = null;
     }
-    tab.save(this.promptAllUnsavedFromIndex_.bind(this, i + 1, callback));
+    this.save(tab, this.promptAllUnsavedFromIndex_.bind(this, i + 1, callback));
   } else {
     this.showTab(this.tabs_[i].getId());
     this.promptSave_(tab, function(answer) {
@@ -428,18 +487,26 @@ Tabs.prototype.promptSave_ = function(tab, callbackShowDialog) {
  * Save opt_tab, or the current tab if no opt_tab is passed.
  * @param {?Tab=} opt_tab Optional tab to save.
  * @param {function()=} opt_callback
+ * @param {boolean=} opt_isAutosave
  */
-Tabs.prototype.save = function(opt_tab, opt_callback) {
+Tabs.prototype.save = function(opt_tab, opt_callback, opt_isAutosave) {
   var tab = opt_tab || this.currentTab_;
+  if (!tab) return;
+
+  // Clear any scheduled autosave timer for this tab.
+  if (tab.autoSaveTimeout_) {
+    clearTimeout(tab.autoSaveTimeout_);
+    tab.autoSaveTimeout_ = null;
+  }
 
   // Update the tab's editorState if it's the current tab.
-  if (tab && tab === this.currentTab_) {
+  if (tab === this.currentTab_) {
     this.updateCurrentTabState_();
   }
 
   if (tab.getEntry()) {
-    tab.save(opt_callback);
-  } else {
+    tab.save(opt_callback, opt_isAutosave);
+  } else if (!opt_isAutosave) {
     this.saveAs(tab, opt_callback);
   }
 };
@@ -552,9 +619,12 @@ Tabs.prototype.saveEntry_ = function(tab, entry, opt_callback) {
 Tabs.prototype.onSettingsChanged_ = function(e, key, value) {
   if (key === 'autosave') {
     if (value) {
+      if (this.currentTab_) {
+        this.updateCurrentTabState_();
+      }
       for (var i = 0; i < this.tabs_.length; i++) {
         if (!this.tabs_[i].isSaved() && this.tabs_[i].getEntry()) {
-          this.save(this.tabs_[i]);
+          this.save(this.tabs_[i], null, true);
         }
       }
     } else {
@@ -583,7 +653,7 @@ Tabs.prototype.onWindowBlur_ = function() {
           clearTimeout(tab.autoSaveTimeout_);
           tab.autoSaveTimeout_ = null;
         }
-        tab.save();
+        this.save(tab, null, true);
       }
     }
   }
@@ -603,7 +673,7 @@ Tabs.prototype.scheduleAutoSave_ = function(tab) {
   tab.autoSaveTimeout_ = setTimeout(function() {
     tab.autoSaveTimeout_ = null;
     if (!tab.isSaved() && tab.getEntry()) {
-      tab.save();
+      this.save(tab, null, true);
     }
   }.bind(this), 1000);
 };
@@ -613,6 +683,7 @@ Tabs.prototype.scheduleAutoSave_ = function(tab) {
  */
 Tabs.prototype.onDocChanged_ = function() {
   if (this.currentTab_) {
+    this.updateCurrentTabState_();
     this.currentTab_.changed();
     if (this.settings_.get('autosave')) {
       this.scheduleAutoSave_(this.currentTab_);
@@ -626,4 +697,16 @@ Tabs.prototype.onDocChanged_ = function() {
  */
 Tabs.prototype.hasOpenTab = function() {
   return !!this.tabs_.length;
+};
+
+/**
+ * @return {boolean} True if any open tab has unsaved changes.
+ */
+Tabs.prototype.hasUnsavedTabs = function() {
+  for (var i = 0; i < this.tabs_.length; i++) {
+    if (!this.tabs_[i].isSaved()) {
+      return true;
+    }
+  }
+  return false;
 };

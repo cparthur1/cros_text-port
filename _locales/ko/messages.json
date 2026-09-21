@@ -27,6 +27,10 @@
     "message": "단축키",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "자동 저장",
+    "description": "자동 저장 설정의 텍스트입니다."
+  },
   "fontsizeSetting": {
     "message": "글꼴 크기",
     "description": "The text of the settings 'Font size'."

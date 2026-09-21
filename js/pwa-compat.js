@@ -281,7 +281,21 @@
     if (options.type === 'openFile' || options.type === 'openWritableFile') {
       window.showOpenFilePicker({
         multiple: options.acceptsMultiple || false
-      }).then(function(handles) {
+      }).then(async function(handles) {
+        if (options.type === 'openWritableFile') {
+          for (var i = 0; i < handles.length; i++) {
+            try {
+              if (handles[i].requestPermission) {
+                var perm = await handles[i].queryPermission({ mode: 'readwrite' });
+                if (perm !== 'granted') {
+                  await handles[i].requestPermission({ mode: 'readwrite' });
+                }
+              }
+            } catch (e) {
+              console.warn('Could not query/request readwrite permission:', e);
+            }
+          }
+        }
         var entries = handles.map(function(h) { return new FileEntryPolyfill(h); });
         callback(options.acceptsMultiple ? entries : entries[0]);
       }).catch(function(err) {

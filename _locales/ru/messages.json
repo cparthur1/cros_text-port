@@ -27,6 +27,10 @@
     "message": "Быстрые клавиши",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Автосохранение",
+    "description": "Текст параметра 'Автосохранение'."
+  },
   "fontsizeSetting": {
     "message": "Размер шрифта",
     "description": "The text of the settings 'Font size'."

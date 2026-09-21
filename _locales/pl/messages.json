@@ -27,6 +27,10 @@
     "message": "Skróty klawiszowe",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Automatyczne zapisywanie",
+    "description": "Tekst ustawienia 'Automatyczne zapisywanie'."
+  },
   "fontsizeSetting": {
     "message": "Rozmiar czcionki",
     "description": "The text of the settings 'Font size'."

@@ -27,6 +27,10 @@
     "message": "Keyboard shortcuts",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Auto save",
+    "description": "The text of the auto save setting."
+  },
   "fontsizeSetting": {
     "message": "Font size",
     "description": "The text of the settings 'Font size'."

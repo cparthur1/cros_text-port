@@ -27,6 +27,10 @@
     "message": "Scorciatoie da tastiera",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Salvataggio automatico",
+    "description": "Il testo dell'impostazione 'Salvataggio automatico'."
+  },
   "fontsizeSetting": {
     "message": "Dimensioni carattere",
     "description": "The text of the settings 'Font size'."

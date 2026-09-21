@@ -27,6 +27,10 @@
     "message": "キーボード ショートカット",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "自動保存",
+    "description": "自動保存設定のテキスト。"
+  },
   "fontsizeSetting": {
     "message": "フォントサイズ",
     "description": "The text of the settings 'Font size'."

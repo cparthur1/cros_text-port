@@ -51,6 +51,10 @@
     "description": "The text of the File Menu 'Save as'.",
     "message": "另存"
   },
+  "autosaveSetting": {
+    "message": "自动保存",
+    "description": "自动保存设置的文本。"
+  },
   "fontsizeSetting": {
     "description": "The text of the settings 'Font size'.",
     "message": "字体大小"

@@ -27,6 +27,10 @@
     "message": "Combinaciones de teclas",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Guardado automático",
+    "description": "El texto de la opción de configuración 'Guardado automático'."
+  },
   "fontsizeSetting": {
     "message": "Tamaño de fuente",
     "description": "The text of the settings 'Font size'."

@@ -27,6 +27,10 @@
     "message": "Sneltoetsen",
     "description": "The text on a button that takes the user to a Help center article showing all the Keyboard shortcuts for the app."
   },
+  "autosaveSetting": {
+    "message": "Automatisch opslaan",
+    "description": "De tekst van de instelling 'Automatisch opslaan'."
+  },
   "fontsizeSetting": {
     "message": "Lettergrootte",
     "description": "The text of the settings 'Font size'."
