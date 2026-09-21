@@ -5,6 +5,8 @@ function WindowController(editor, settings, tabs) {
   this.editor_ = editor;
   this.settings_ = settings;
   this.tabs_ = tabs;
+  this.autoSavingAnimTimer_ = null;
+  this.autoSavingFrame_ = 1;
 
   var closeButton = document.getElementById('window-close');
   if (closeButton) {
@@ -272,6 +274,7 @@ WindowController.prototype.updateAutosaveIndicator_ = function() {
 
   var currentTab = this.tabs_.getCurrentTab();
   if (!currentTab) {
+    this.stopAutoSavingAnimation_();
     indicator.style.display = 'none';
     return;
   }
@@ -280,26 +283,30 @@ WindowController.prototype.updateAutosaveIndicator_ = function() {
   indicator.className = 'autosave-indicator';
 
   if (currentTab.isMissing()) {
+    this.stopAutoSavingAnimation_();
     indicator.classList.add('status-missing');
     icon.setAttribute('src', 'assets/sync_error.svg');
     indicator.setAttribute('title', chrome.i18n.getMessage('missingFileIndicator') || 'File is missing in location - click to Save As');
     indicator.setAttribute('aria-label', 'File missing in location');
   } else if (currentTab.saveError_) {
+    this.stopAutoSavingAnimation_();
     indicator.classList.add('status-error');
     icon.setAttribute('src', 'assets/sync_error.svg');
     indicator.setAttribute('title', chrome.i18n.getMessage('saveErrorIndicator') || 'Error saving changes - click to retry');
     indicator.setAttribute('aria-label', 'Error saving changes');
   } else if (currentTab.isSaving_ || currentTab.autoSaveTimeout_) {
     indicator.classList.add('status-saving');
-    icon.setAttribute('src', 'assets/auto_saving.svg');
+    this.startAutoSavingAnimation_(icon);
     indicator.setAttribute('title', chrome.i18n.getMessage('savingIndicator') || 'Saving changes...');
     indicator.setAttribute('aria-label', 'Saving changes');
   } else if (currentTab.isSaved()) {
+    this.stopAutoSavingAnimation_();
     indicator.classList.add('status-saved');
     icon.setAttribute('src', 'assets/autosaved.svg');
     indicator.setAttribute('title', chrome.i18n.getMessage('savedIndicator') || 'All changes saved');
     indicator.setAttribute('aria-label', 'All changes saved');
   } else {
+    this.stopAutoSavingAnimation_();
     indicator.classList.add('status-unsaved');
     icon.setAttribute('src', 'assets/save.svg');
     indicator.setAttribute('title', chrome.i18n.getMessage('unsavedIndicator') || 'Unsaved changes - click to save');
@@ -307,13 +314,46 @@ WindowController.prototype.updateAutosaveIndicator_ = function() {
   }
 };
 
+/**
+ * Starts the flipbook frame switching animation between frame1 and frame2 while autosaving.
+ * @param {HTMLElement} icon
+ * @private
+ */
+WindowController.prototype.startAutoSavingAnimation_ = function(icon) {
+  if (this.autoSavingAnimTimer_) return;
+  this.autoSavingFrame_ = 1;
+  if (icon) {
+    icon.setAttribute('src', 'assets/auto_saving_frame1.svg');
+  }
+
+  this.autoSavingAnimTimer_ = setInterval(function() {
+    var iconEl = document.getElementById('autosave-indicator-icon');
+    if (!iconEl) return;
+    this.autoSavingFrame_ = (this.autoSavingFrame_ === 1 ? 2 : 1);
+    iconEl.setAttribute('src', 'assets/auto_saving_frame' + this.autoSavingFrame_ + '.svg');
+  }.bind(this), 300);
+};
+
+/**
+ * Stops the autosaving frame animation if running.
+ * @private
+ */
+WindowController.prototype.stopAutoSavingAnimation_ = function() {
+  if (this.autoSavingAnimTimer_) {
+    clearInterval(this.autoSavingAnimTimer_);
+    this.autoSavingAnimTimer_ = null;
+  }
+};
+
 WindowController.prototype.onLoadingFile = function(e) {
+  this.stopAutoSavingAnimation_();
   this.setTitleText_(chrome.i18n.getMessage('loadingTitle'));
   var indicator = document.getElementById('autosave-indicator');
   if (indicator) indicator.style.display = 'none';
 };
 
 WindowController.prototype.onFileSystemError = function(e) {
+  this.stopAutoSavingAnimation_();
   this.setTitleText_(chrome.i18n.getMessage('errorTitle'));
   var indicator = document.getElementById('autosave-indicator');
   if (indicator) indicator.style.display = 'none';

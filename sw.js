@@ -1,4 +1,4 @@
-const CACHE_NAME = 'text-app-v12';
+const CACHE_NAME = 'text-app-v13';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,8 @@ const ASSETS = [
   './css/print.css',
   './assets/missing_file.svg',
   './assets/auto_saving.svg',
+  './assets/auto_saving_frame1.svg',
+  './assets/auto_saving_frame2.svg',
   './assets/autosaved.svg',
   './assets/save.svg',
   './assets/sync_error.svg',
