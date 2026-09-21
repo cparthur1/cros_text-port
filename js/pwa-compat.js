@@ -201,7 +201,8 @@
     "savedIndicator": { "message": "All changes saved" },
     "unsavedIndicator": { "message": "Unsaved changes - click to save" },
     "saveErrorIndicator": { "message": "Error saving changes - click to retry" },
-    "missingFileIndicator": { "message": "File is missing in location - click to Save As" }
+    "missingFileIndicator": { "message": "File is missing in location - click to Save As" },
+    "dropFilesToOpen": { "message": "Drop files here to open" }
   };
   var locale = navigator.language.replace('-', '_');
   var defaultLocale = 'en';

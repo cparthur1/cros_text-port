@@ -36,6 +36,7 @@ function WindowController(editor, settings, tabs) {
   $(document).bind('settingschange', this.onSettingsChange_.bind(this));
 
   this.ensureAutosaveIndicatorDom_();
+  this.initFileDrop_();
   this.initUI_();
 }
 
@@ -341,4 +342,162 @@ WindowController.prototype.updateSidebarVisibility_ = function() {
 WindowController.prototype.onError_ = function(event) {
   var message = event.originalEvent.message;
   var errorStack = event.originalEvent.error.stack;
+};
+
+/**
+ * Initializes drag and drop file opening listeners.
+ * @private
+ */
+WindowController.prototype.initFileDrop_ = function() {
+  var self = this;
+  var dragCounter = 0;
+
+  var overlay = document.getElementById('drag-drop-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'drag-drop-overlay';
+    overlay.className = 'drag-drop-overlay';
+
+    var content = document.createElement('div');
+    content.className = 'drag-drop-content';
+
+    var icon = document.createElement('span');
+    icon.className = 'material-icons drag-drop-icon';
+    icon.textContent = 'note_add';
+
+    var text = document.createElement('span');
+    text.className = 'drag-drop-text';
+    text.textContent = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('dropFilesToOpen')) || 'Drop files here to open';
+
+    content.appendChild(icon);
+    content.appendChild(text);
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+  }
+
+  window.addEventListener('dragenter', function(e) {
+    if (self.isDraggingFiles_(e)) {
+      dragCounter++;
+      overlay.classList.add('active');
+    }
+  });
+
+  window.addEventListener('dragover', function(e) {
+    if (self.isDraggingFiles_(e)) {
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      overlay.classList.add('active');
+    }
+  });
+
+  window.addEventListener('dragleave', function(e) {
+    if (self.isDraggingFiles_(e)) {
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        overlay.classList.remove('active');
+      }
+    }
+  });
+
+  window.addEventListener('drop', function(e) {
+    if (!self.isDraggingFiles_(e)) return;
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.classList.remove('active');
+
+    self.handleDroppedFiles_(e.dataTransfer);
+  });
+};
+
+/**
+ * Checks whether a drag event contains external files (not internal tab dragging).
+ * @param {DragEvent} e
+ * @return {boolean}
+ * @private
+ */
+WindowController.prototype.isDraggingFiles_ = function(e) {
+  if (!e || !e.dataTransfer) return false;
+  var types = e.dataTransfer.types;
+  if (!types) return false;
+  // If tabs are being dragged internally, don't trigger file drop
+  if (document.querySelector('#tabs-list li.dragging')) {
+    return false;
+  }
+  for (var i = 0; i < types.length; i++) {
+    if (types[i] === 'Files') return true;
+  }
+  return false;
+};
+
+/**
+ * Handles dropped files via File System Access API or HTML5 Files fallback.
+ * @param {DataTransfer} dataTransfer
+ * @private
+ */
+WindowController.prototype.handleDroppedFiles_ = async function(dataTransfer) {
+  if (!dataTransfer) return;
+
+  var entries = [];
+
+  // Modern Chromium: File System Access API from drag and drop
+  if (dataTransfer.items && dataTransfer.items.length > 0 && typeof dataTransfer.items[0].getAsFileSystemHandle === 'function') {
+    for (var i = 0; i < dataTransfer.items.length; i++) {
+      var item = dataTransfer.items[i];
+      if (item.kind === 'file') {
+        try {
+          var handle = await item.getAsFileSystemHandle();
+          if (handle && handle.kind === 'file') {
+            entries.push(new window.FileEntryPolyfill(handle));
+          }
+        } catch (err) {
+          console.warn('Could not get FileSystemHandle from drop item:', err);
+        }
+      }
+    }
+  }
+
+  if (entries.length > 0) {
+    for (var j = 0; j < entries.length; j++) {
+      this.tabs_.openFileEntry(entries[j]);
+    }
+    return;
+  }
+
+  // Fallback for Safari/Firefox or when getAsFileSystemHandle is unsupported
+  var files = dataTransfer.files;
+  if (files && files.length > 0) {
+    for (var k = 0; k < files.length; k++) {
+      this.openDroppedFileFallback_(files[k]);
+    }
+  }
+};
+
+/**
+ * Fallback to read and open a dropped File object.
+ * @param {File} file
+ * @private
+ */
+WindowController.prototype.openDroppedFileFallback_ = function(file) {
+  if (!file) return;
+  var self = this;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var content = e.target.result;
+    var tab = self.tabs_.newTab(content, null, false, file.name);
+    tab.lineEndings_ = util.guessLineEndings(content);
+    tab.lastModified_ = file.lastModified;
+
+    // If there was only 1 blank Untitled tab before opening, close it
+    if (self.tabs_.tabs_.length === 2 &&
+        !self.tabs_.tabs_[0].getEntry() &&
+        self.tabs_.tabs_[0].isSaved() &&
+        self.tabs_.tabs_[0].getName().indexOf('Untitled ') === 0 &&
+        self.tabs_.tabs_[0].getContent_() === '') {
+      self.tabs_.close(self.tabs_.tabs_[0].getId());
+    }
+  };
+  reader.readAsText(file);
 };

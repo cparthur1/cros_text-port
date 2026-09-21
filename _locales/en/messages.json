@@ -222,5 +222,9 @@
   "missingFileIndicator": {
     "message": "File is missing in location - click to Save As",
     "description": "Tooltip for the missing file indicator."
+  },
+  "dropFilesToOpen": {
+    "message": "Drop files here to open",
+    "description": "Overlay text when dragging files into the editor."
   }
 }
