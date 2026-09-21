@@ -61,8 +61,8 @@ Tab.prototype.isMissing = function() {
 Tab.prototype.setMissing = function(isMissing) {
   if (this.isMissing_ !== isMissing) {
     this.isMissing_ = isMissing;
-    $.event.trigger('tabmissingchange', this);
-    $.event.trigger('tabrenamed', this);
+    util.triggerEvent('tabmissingchange', this);
+    util.triggerEvent('tabrenamed', this);
   }
 };
 
@@ -105,7 +105,7 @@ Tab.prototype.setEntry = function(entry) {
     }
   }
   if (nameChanged)
-    $.event.trigger('tabrenamed', this);
+    util.triggerEvent('tabrenamed', this);
   this.updatePath_();
 };
 
@@ -121,7 +121,7 @@ Tab.prototype.updatePath_ = function() {
   if (!this.entry_) return;
   chrome.fileSystem.getDisplayPath(this.entry_, function(path) {
     this.path_ = path;
-    $.event.trigger('tabpathchange', this);
+    util.triggerEvent('tabpathchange', this);
   }.bind(this));
 };
 
@@ -149,7 +149,7 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
 
   this.isSaving_ = true;
   this.saveError_ = false;
-  $.event.trigger('tabsaving', this);
+  util.triggerEvent('tabsaving', this);
   var contentToSave = this.getContent_();
 
   util.writeFile(
@@ -181,7 +181,7 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
       } else {
         if (this.getContent_() === contentToSave) {
           this.saved_ = true;
-          $.event.trigger('tabsave', this);
+          util.triggerEvent('tabsave', this);
         }
         callbacks.forEach(function(cb) { cb(); });
       }
@@ -190,7 +190,7 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
       this.isSaving_ = false;
       this.savePending_ = false;
       this.saveError_ = true;
-      $.event.trigger('tabsaveerror', this);
+      util.triggerEvent('tabsaveerror', this);
       var callbacks = this.pendingSaveCallbacks_.slice();
       this.pendingSaveCallbacks_ = [];
 
@@ -222,7 +222,7 @@ Tab.prototype.changed = function() {
   this.saveError_ = false;
   if (this.saved_) {
     this.saved_ = false;
-    $.event.trigger('tabchange', this);
+    util.triggerEvent('tabchange', this);
   }
 };
 
@@ -243,9 +243,13 @@ function Tabs(editor, dialogController, settings) {
 
   this.sessionSaveTimeout_ = null;
 
-  $(document).bind('docchange', this.onDocChanged_.bind(this));
-  $(document).bind('settingschange', this.onSettingsChanged_.bind(this));
-  $(window).bind('blur', this.onWindowBlur_.bind(this));
+  document.addEventListener('docchange', this.onDocChanged_.bind(this));
+  document.addEventListener('settingschange', (e) => {
+    var key = e.detail && e.detail.key !== undefined ? e.detail.key : (Array.isArray(e.detail) ? e.detail[0] : null);
+    var value = e.detail && e.detail.value !== undefined ? e.detail.value : (Array.isArray(e.detail) ? e.detail[1] : null);
+    if (key !== null) this.onSettingsChanged_(e, key, value);
+  });
+  window.addEventListener('blur', this.onWindowBlur_.bind(this));
   window.addEventListener('focus', this.checkExternalModifications_.bind(this));
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
@@ -351,7 +355,7 @@ Tabs.prototype.newTab = function(opt_content, opt_entry, opt_isMissing, opt_cach
   var tab = new Tab(id, session, lineEndings, opt_entry || null,
                     this.dialogController_, opt_isMissing, opt_cachedName, opt_cachedPath);
   this.tabs_.push(tab);
-  $.event.trigger('newtab', tab);
+  util.triggerEvent('newtab', tab);
   this.showTab(tab.getId());
   this.saveSession_();
   return tab;
@@ -418,7 +422,7 @@ Tabs.prototype.showTab = function(tabId) {
   }
   this.currentTab_ = tab;
   this.editor_.setSession(tab.getSession(), tab.getExtension());
-  $.event.trigger('switchtab', tab);
+  util.triggerEvent('switchtab', tab);
   this.editor_.focus();
   this.saveSession_();
   this.checkSingleTabModification_(tab);
@@ -479,7 +483,7 @@ Tabs.prototype.closeTab_ = function(tab) {
   }
 
   this.tabs_.splice(i, 1);
-  $.event.trigger('tabclosed', tab);
+  util.triggerEvent('tabclosed', tab);
   this.saveSession_();
 };
 
@@ -661,7 +665,7 @@ Tabs.prototype.modeAutoSet = function(tab) {
 };
 
 Tabs.prototype.readFileToNewTab_ = function(entry, file) {
-  $.event.trigger('loadingfile');
+  util.triggerEvent('loadingfile');
   var self = this;
   if (!file) {
     self.newTab('', entry, true, entry ? entry.name : 'Unknown');
@@ -757,7 +761,7 @@ Tabs.prototype.scheduleAutoSave_ = function(tab) {
     clearTimeout(tab.autoSaveTimeout_);
   }
 
-  $.event.trigger('tabsaving', tab);
+  util.triggerEvent('tabsaving', tab);
 
   tab.autoSaveTimeout_ = setTimeout(function() {
     tab.autoSaveTimeout_ = null;
@@ -949,7 +953,7 @@ Tabs.prototype.restoreSession_ = async function() {
         tab.changed();
       }
       this.tabs_.push(tab);
-      $.event.trigger('newtab', tab);
+      util.triggerEvent('newtab', tab);
     }
 
     if (activeId && this.getTabById(activeId)) {
@@ -1067,7 +1071,7 @@ Tabs.prototype.checkNextTabModification_ = function(tabsToCheck, index) {
           if (self.currentTab_ === tab) {
             self.editor_.setSession(newState, tab.getExtension());
           }
-          $.event.trigger('tabreloaded', tab);
+          util.triggerEvent('tabreloaded', tab);
           self.saveSession_();
           var toastMsg = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('fileReloadedToast', tab.getName())) || (tab.getName() + ' reloaded (modified externally)');
           util.showToast(toastMsg);
@@ -1114,7 +1118,7 @@ Tabs.prototype.checkNextTabModification_ = function(tabsToCheck, index) {
             if (self.currentTab_ === tab) {
               self.editor_.setSession(newState, tab.getExtension());
             }
-            $.event.trigger('tabsave', tab);
+            util.triggerEvent('tabsave', tab);
             self.saveSession_();
             var toastMsg = (window.chrome && window.chrome.i18n && window.chrome.i18n.getMessage('fileReloadedToast', tab.getName())) || (tab.getName() + ' reloaded (modified externally)');
             util.showToast(toastMsg);

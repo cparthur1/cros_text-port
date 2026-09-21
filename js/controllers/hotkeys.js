@@ -12,7 +12,7 @@ function HotkeysController(windowController, tabs, editor, settings,
   this.ZOOM_IN_FACTOR = 9 / 8;
   this.ZOOM_OUT_FACTOR = 8 / 9;
 
-  $(document).keydown(this.onKeydown_.bind(this));
+  document.addEventListener('keydown', this.onKeydown_.bind(this));
 };
 
 /**
@@ -44,12 +44,12 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case 'f':
       case 'F':
-        $.event.trigger('opensearch');
+        util.triggerEvent('opensearch');
         return false;
 
       case 'h':
       case 'H':
-        $.event.trigger('openreplace');
+        util.triggerEvent('openreplace');
         return false;
 
       case 'n':
@@ -112,7 +112,8 @@ HotkeysController.prototype.onKeydown_ = function(e) {
     }
   } else if (e.altKey) {
     if (e.key === ' ') {
-      $('#toggle-sidebar').click();
+      var toggleBtn = document.getElementById('toggle-sidebar');
+      if (toggleBtn) toggleBtn.click();
       return false;
     }
   }

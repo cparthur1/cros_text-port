@@ -122,7 +122,9 @@
           Object.keys(items).forEach(function(key) {
             changes[key] = { newValue: items[key] };
           });
-          $.event.trigger('storageOnChanged', [changes, areaName]);
+          document.dispatchEvent(new CustomEvent('storageOnChanged', {
+            detail: { changes: changes, areaName: areaName }
+          }));
           callback();
         }
       },
@@ -148,8 +150,10 @@
   chrome.storage.sync = createStorageArea('sync');
   chrome.storage.onChanged = {
     addListener: function(callback) {
-      $(document).bind('storageOnChanged', function(e, changes, areaName) {
-        callback(changes, areaName);
+      document.addEventListener('storageOnChanged', function(e) {
+        if (e.detail) {
+          callback(e.detail.changes, e.detail.areaName);
+        }
       });
     }
   };
@@ -238,10 +242,10 @@
   loadLocale(defaultLocale, function() {
     if (locale !== defaultLocale && window.location.protocol !== 'file:') {
       loadLocale(locale, function() {
-        $.event.trigger('i18n-ready');
+        document.dispatchEvent(new CustomEvent('i18n-ready'));
       });
     } else {
-      $.event.trigger('i18n-ready');
+      document.dispatchEvent(new CustomEvent('i18n-ready'));
     }
   });
 

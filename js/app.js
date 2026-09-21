@@ -30,9 +30,13 @@ TextApp.prototype.init = function() {
   if (this.settings_.isReady()) {
     this.onSettingsReady_();
   } else {
-    $(document).bind('settingsready', this.onSettingsReady_.bind(this));
+    document.addEventListener('settingsready', this.onSettingsReady_.bind(this));
   }
-  $(document).bind('settingschange', this.onSettingsChanged_.bind(this));
+  document.addEventListener('settingschange', (e) => {
+    var key = e.detail && e.detail.key !== undefined ? e.detail.key : (Array.isArray(e.detail) ? e.detail[0] : null);
+    var value = e.detail && e.detail.value !== undefined ? e.detail.value : (Array.isArray(e.detail) ? e.detail[1] : null);
+    if (key !== null) this.onSettingsChanged_(e, key, value);
+  });
 };
 
 /**
@@ -96,7 +100,7 @@ TextApp.prototype.onSettingsReady_ = function() {
  */
 TextApp.prototype.initControllers_ = function() {
   this.dialogController_ =
-      new DialogController($('#dialog-container'), this.editor_);
+      new DialogController(document.getElementById('dialog-container'), this.editor_);
   this.tabs_ = new Tabs(this.editor_, this.dialogController_, this.settings_);
   this.menuController_ = new MenuController(this.tabs_);
   this.windowController_ =

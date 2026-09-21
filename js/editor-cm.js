@@ -419,7 +419,7 @@ EditorCodeMirror.prototype.setReplaceTabWithSpaces = function(useSpace) {
  */
 EditorCodeMirror.prototype.onViewUpdate = function(update) {
   if (update.docChanged) {
-    $.event.trigger('docchange');
+    util.triggerEvent('docchange');
   }
   if (update.docChanged || update.selectionSet) {
     this.updateStatus_(update.state);
@@ -470,7 +470,7 @@ EditorCodeMirror.prototype.updateStatus_ = function(opt_state) {
     lines: state.doc.lines
   };
 
-  $.event.trigger('cursoractivity', statusData);
+  util.triggerEvent('cursoractivity', statusData);
 };
 
 EditorCodeMirror.prototype.disable = function() {

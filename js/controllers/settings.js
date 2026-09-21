@@ -8,15 +8,24 @@ function SettingsController(settings) {
   if (this.settings_.isReady()) {
     this.showAll_();
   } else {
-    $(document).bind('settingsready', this.showAll_.bind(this));
+    document.addEventListener('settingsready', this.showAll_.bind(this));
   }
 
-  $(document).bind('settingschange', this.onSettingChange_.bind(this));
+  document.addEventListener('settingschange', (e) => {
+    var key = e.detail && e.detail.key !== undefined ? e.detail.key : (Array.isArray(e.detail) ? e.detail[0] : null);
+    var value = e.detail && e.detail.value !== undefined ? e.detail.value : (Array.isArray(e.detail) ? e.detail[1] : null);
+    if (key !== null) {
+      this.onSettingChange_(e, key, value);
+    }
+  });
 
   this.addInputListeners_();
 
-  $('#open-settings').click(this.openSettings_.bind(this));
-  $('#close-settings').click(this.closeSettings.bind(this));
+  var openBtn = document.getElementById('open-settings');
+  if (openBtn) openBtn.addEventListener('click', this.openSettings_.bind(this));
+
+  var closeBtn = document.getElementById('close-settings');
+  if (closeBtn) closeBtn.addEventListener('click', this.closeSettings.bind(this));
 }
 
 /**
@@ -28,7 +37,10 @@ SettingsController.prototype.addInputListeners_ = function() {
     switch (Settings.SETTINGS[key].widget) {
       case 'checkbox':
       case 'number':
-        $('#setting-' + key).change(this.saveSetting_.bind(this, key));
+        var el = document.getElementById('setting-' + key);
+        if (el) {
+          el.addEventListener('change', this.saveSetting_.bind(this, key));
+        }
         break;
       case 'radio':
         for (const element of
@@ -41,16 +53,20 @@ SettingsController.prototype.addInputListeners_ = function() {
 };
 
 SettingsController.prototype.openSettings_ = function() {
-  $('#sidebar').addClass('open-settings');
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.add('open-settings');
   // Focus the first setting.
-  $('#settings-list input:first').focus();
+  var firstInput = document.querySelector('#settings-list input');
+  if (firstInput) firstInput.focus();
 };
 
 /** Close the settings page if it was open. */
 SettingsController.prototype.closeSettings = function() {
-  $('#sidebar').removeClass('open-settings');
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open-settings');
   // Focus the button that reopens settings.
-  $('#open-settings').focus();
+  var openBtn = document.getElementById('open-settings');
+  if (openBtn) openBtn.focus();
 };
 
 SettingsController.prototype.showAll_ = function() {
@@ -73,11 +89,15 @@ SettingsController.prototype.show_ = function(key, value) {
       this.setSwitch_(key, value);
       break;
     case 'number':
-      $('#setting-' +key).val(parseInt(value));
+      var numInput = document.getElementById('setting-' + key);
+      if (numInput) numInput.value = parseInt(value);
       break;
     case 'radio':
-      document.getElementById('setting-' + key + '-' + value)
-          .setAttribute('checked', '');
+      var radioInput = document.getElementById('setting-' + key + '-' + value);
+      if (radioInput) {
+        radioInput.checked = true;
+      }
+      break;
   }
 };
 
@@ -115,17 +135,18 @@ SettingsController.prototype.saveSetting_ = function(key) {
   var value;
   switch (Settings.SETTINGS[key].widget) {
     case 'checkbox':
-      value = $('#setting-' + key).prop('checked');
+      var cb = document.getElementById('setting-' + key);
+      value = cb ? cb.checked : false;
       break;
     case 'number':
-      value = parseInt($('#setting-' + key).val());
+      var num = document.getElementById('setting-' + key);
+      value = num ? parseInt(num.value) : Settings.SETTINGS[key]['default'];
       break;
     case 'radio':
-      value = document.querySelector('input[name=setting-' + key + ']:checked')
-          .getAttribute('value');
+      var checkedRadio = document.querySelector('input[name=setting-' + key + ']:checked');
+      value = checkedRadio ? checkedRadio.getAttribute('value') : Settings.SETTINGS[key]['default'];
       break;
   }
 
   this.settings_.set(key, value);
 };
-

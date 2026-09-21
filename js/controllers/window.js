@@ -5,6 +5,7 @@ function WindowController(editor, settings, tabs) {
   this.editor_ = editor;
   this.settings_ = settings;
   this.tabs_ = tabs;
+
   var closeButton = document.getElementById('window-close');
   if (closeButton) {
     closeButton.addEventListener('click', () => {
@@ -13,32 +14,59 @@ function WindowController(editor, settings, tabs) {
   }
   var minimizeButton = document.getElementById('window-minimize');
   if (minimizeButton) {
-    $(minimizeButton).click(this.minimize_.bind(this));
+    minimizeButton.addEventListener('click', this.minimize_.bind(this));
   }
   var maximizeButton = document.getElementById('window-maximize');
   if (maximizeButton) {
-    $(maximizeButton).click(this.maximize_.bind(this));
+    maximizeButton.addEventListener('click', this.maximize_.bind(this));
   }
-  $('#toggle-sidebar').click(this.toggleSidebar_.bind(this));
-  $('#sidebar').on('transitionend', this.updateSidebarVisibility_.bind(this));
-  $('#sidebar-resizer').mousedown(this.resizeStart_.bind(this));
-  $(window).bind('error', this.onError_.bind(this));
-  $(document).bind('filesystemerror', this.onFileSystemError.bind(this));
-  $(document).bind('loadingfile', this.onLoadingFile.bind(this));
-  $(document).bind('switchtab', this.onChangeTab_.bind(this));
-  $(document).bind('tabchange', this.onTabChange_.bind(this));
-  $(document).bind('tabpathchange', this.onTabPathChange.bind(this));
-  $(document).bind('tabrenamed', this.onChangeTab_.bind(this));
-  $(document).bind('tabsave', this.onTabChange_.bind(this));
-  $(document).bind('tabsaving', this.updateAutosaveIndicator_.bind(this));
-  $(document).bind('tabsaveerror', this.updateAutosaveIndicator_.bind(this));
-  $(document).bind('tabmissingchange', this.onTabMissingChange_.bind(this));
-  $(document).bind('settingschange', this.onSettingsChange_.bind(this));
+  var toggleSidebarBtn = document.getElementById('toggle-sidebar');
+  if (toggleSidebarBtn) {
+    toggleSidebarBtn.addEventListener('click', this.toggleSidebar_.bind(this));
+  }
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.addEventListener('transitionend', this.updateSidebarVisibility_.bind(this));
+  }
+  var resizer = document.getElementById('sidebar-resizer');
+  if (resizer) {
+    resizer.addEventListener('mousedown', this.resizeStart_.bind(this));
+  }
+
+  window.addEventListener('error', this.onError_.bind(this));
+  document.addEventListener('filesystemerror', this.onFileSystemError.bind(this));
+  document.addEventListener('loadingfile', this.onLoadingFile.bind(this));
+  document.addEventListener('switchtab', (e) => this.onChangeTab_(this.resolveTab_(e)));
+  document.addEventListener('tabchange', (e) => this.onTabChange_(this.resolveTab_(e)));
+  document.addEventListener('tabpathchange', (e) => this.onTabPathChange(this.resolveTab_(e)));
+  document.addEventListener('tabrenamed', (e) => this.onChangeTab_(this.resolveTab_(e)));
+  document.addEventListener('tabsave', (e) => this.onTabChange_(this.resolveTab_(e)));
+  document.addEventListener('tabsaving', (e) => this.updateAutosaveIndicator_(this.resolveTab_(e)));
+  document.addEventListener('tabsaveerror', (e) => this.updateAutosaveIndicator_(this.resolveTab_(e)));
+  document.addEventListener('tabmissingchange', (e) => this.onTabMissingChange_(this.resolveTab_(e)));
+  document.addEventListener('settingschange', (e) => {
+    var key = e.detail && e.detail.key !== undefined ? e.detail.key : (Array.isArray(e.detail) ? e.detail[0] : null);
+    var value = e.detail && e.detail.value !== undefined ? e.detail.value : (Array.isArray(e.detail) ? e.detail[1] : null);
+    if (key !== null) this.onSettingsChange_(e, key, value);
+  });
 
   this.ensureAutosaveIndicatorDom_();
   this.initFileDrop_();
   this.initUI_();
 }
+
+/**
+ * Resolves Tab instance whether passed as an event or direct argument.
+ * @param {*=} opt_e
+ * @param {*=} opt_tab
+ * @return {Tab}
+ * @private
+ */
+WindowController.prototype.resolveTab_ = function(opt_e, opt_tab) {
+  if (opt_tab) return opt_tab;
+  if (opt_e && opt_e.detail) return opt_e.detail;
+  return opt_e;
+};
 
 /**
  * Performs all the required initialization for the UI.
@@ -48,8 +76,6 @@ WindowController.prototype.initUI_ = function() {
   for (const element of document.querySelectorAll('.mdc-icon-button')) {
     const ripple = mdc.ripple.MDCRipple.attachTo(element);
     ripple.unbounded = true;
-    // Required due to issue
-    // https://github.com/material-components/material-components-web/issues/3984
     new ResizeObserver(() => {
       ripple.layout();
     }).observe(element);
@@ -64,31 +90,37 @@ WindowController.prototype.initUI_ = function() {
   if (this.settings_.isReady()) {
     this.initSidebar_();
   } else {
-    $(document).bind('settingsready', this.initSidebar_.bind(this));
+    document.addEventListener('settingsready', this.initSidebar_.bind(this));
   }
 };
 
 WindowController.prototype.initSidebar_ = function() {
-  // FIXME: move this to CSS where possible (init code)
+  var sidebar = document.getElementById('sidebar');
+  var toggleBtn = document.getElementById('toggle-sidebar');
   if (this.settings_.get('sidebaropen')) {
-    $('#sidebar').css('width', this.settings_.get('sidebarwidth') + 'px');
-    $('#sidebar').css('border-right-width', '2px');
-    $('#toggle-sidebar')
-        .attr('title', chrome.i18n.getMessage('closeSidebarButton'));
+    if (sidebar) {
+      sidebar.style.width = this.settings_.get('sidebarwidth') + 'px';
+      sidebar.style.borderRightWidth = '2px';
+    }
+    if (toggleBtn) {
+      toggleBtn.setAttribute('title', chrome.i18n.getMessage('closeSidebarButton'));
+    }
   } else {
-    $('#sidebar').css('width', '0');
-    $('#sidebar').css('border-right-width', '0');
-    $('#toggle-sidebar')
-        .attr('title', chrome.i18n.getMessage('openSidebarButton'));
+    if (sidebar) {
+      sidebar.style.width = '0';
+      sidebar.style.borderRightWidth = '0';
+    }
+    if (toggleBtn) {
+      toggleBtn.setAttribute('title', chrome.i18n.getMessage('openSidebarButton'));
+    }
   }
   this.updateSidebarVisibility_();
 };
 
 WindowController.prototype.windowControlsVisible = function(show) {
-  if (show) {
-    $('header').removeClass('hide-controls');
-  } else {
-    $('header').addClass('hide-controls');
+  var header = document.querySelector('header');
+  if (header) {
+    header.classList.toggle('hide-controls', !show);
   }
 };
 
@@ -96,7 +128,7 @@ WindowController.prototype.windowControlsVisible = function(show) {
  * @param {string} theme
  */
 WindowController.prototype.setTheme = function(theme) {
-  $('body').attr('theme', theme);
+  document.body.setAttribute('theme', theme);
 };
 
 /**
@@ -117,14 +149,13 @@ WindowController.prototype.minimize_ = function() {
 WindowController.prototype.maximize_ = function() {
   var maximized = window.chrome.app.window.current().isMaximized();
 
+  var maxBtn = document.getElementById('window-maximize');
   if (maximized) {
     window.chrome.app.window.current().restore();
-    $('#window-maximize')
-        .attr('title', chrome.i18n.getMessage('maximizeButton'));
+    if (maxBtn) maxBtn.setAttribute('title', chrome.i18n.getMessage('maximizeButton'));
   } else {
     window.chrome.app.window.current().maximize();
-    $('#window-maximize')
-        .attr('title', chrome.i18n.getMessage('restoreButton'));
+    if (maxBtn) maxBtn.setAttribute('title', chrome.i18n.getMessage('restoreButton'));
   }
 };
 
@@ -136,21 +167,30 @@ WindowController.prototype.setAlwaysOnTop = function(isAlwaysOnTop) {
 WindowController.prototype.openSidebar = function() {
   if (this.settings_.get('sidebaropen')) return;
   this.settings_.set('sidebaropen', true);
-    $('#sidebar').css('width', this.settings_.get('sidebarwidth') + 'px');
-    $('#sidebar').css('border-right-width', '2px');
-    $('#sidebar').css('visibility', 'visible');
-    $('#toggle-sidebar')
-        .attr('title', chrome.i18n.getMessage('closeSidebarButton'));
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.style.width = this.settings_.get('sidebarwidth') + 'px';
+    sidebar.style.borderRightWidth = '2px';
+    sidebar.style.visibility = 'visible';
+  }
+  var toggleBtn = document.getElementById('toggle-sidebar');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('title', chrome.i18n.getMessage('closeSidebarButton'));
+  }
 };
 
 WindowController.prototype.toggleSidebar_ = function() {
-  // FIXME: Move this to css where possible (toggle code)
   if (this.settings_.get('sidebaropen')) {
     this.settings_.set('sidebaropen', false);
-    $('#sidebar').css('width', '0');
-    $('#sidebar').css('border-right-width', '0');
-    $('#toggle-sidebar')
-        .attr('title', chrome.i18n.getMessage('openSidebarButton'));
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+      sidebar.style.width = '0';
+      sidebar.style.borderRightWidth = '0';
+    }
+    var toggleBtn = document.getElementById('toggle-sidebar');
+    if (toggleBtn) {
+      toggleBtn.setAttribute('title', chrome.i18n.getMessage('openSidebarButton'));
+    }
   } else {
     this.openSidebar();
   }
@@ -216,85 +256,94 @@ WindowController.prototype.onAutosaveIndicatorClick_ = function(e) {
 
 WindowController.prototype.updateAutosaveIndicator_ = function() {
   this.ensureAutosaveIndicatorDom_();
-  var indicator = $('#autosave-indicator');
-  var icon = $('#autosave-indicator-icon');
-  if (!indicator.length || !icon.length) return;
+  var indicator = document.getElementById('autosave-indicator');
+  var icon = document.getElementById('autosave-indicator-icon');
+  if (!indicator || !icon) return;
 
   var currentTab = this.tabs_.getCurrentTab();
   if (!currentTab) {
-    indicator.hide();
+    indicator.style.display = 'none';
     return;
   }
 
-  indicator.show();
-  indicator.removeClass('status-saved status-saving status-unsaved status-error status-missing');
+  indicator.style.display = '';
+  indicator.className = 'autosave-indicator';
 
   if (currentTab.isMissing()) {
-    indicator.addClass('status-missing');
-    icon.attr('src', 'assets/sync_error.svg');
-    indicator.attr('title', chrome.i18n.getMessage('missingFileIndicator') || 'File is missing in location - click to Save As');
-    indicator.attr('aria-label', 'File missing in location');
+    indicator.classList.add('status-missing');
+    icon.setAttribute('src', 'assets/sync_error.svg');
+    indicator.setAttribute('title', chrome.i18n.getMessage('missingFileIndicator') || 'File is missing in location - click to Save As');
+    indicator.setAttribute('aria-label', 'File missing in location');
   } else if (currentTab.saveError_) {
-    indicator.addClass('status-error');
-    icon.attr('src', 'assets/sync_error.svg');
-    indicator.attr('title', chrome.i18n.getMessage('saveErrorIndicator') || 'Error saving changes - click to retry');
-    indicator.attr('aria-label', 'Error saving changes');
+    indicator.classList.add('status-error');
+    icon.setAttribute('src', 'assets/sync_error.svg');
+    indicator.setAttribute('title', chrome.i18n.getMessage('saveErrorIndicator') || 'Error saving changes - click to retry');
+    indicator.setAttribute('aria-label', 'Error saving changes');
   } else if (currentTab.isSaving_ || currentTab.autoSaveTimeout_) {
-    indicator.addClass('status-saving');
-    icon.attr('src', 'assets/auto_saving.svg');
-    indicator.attr('title', chrome.i18n.getMessage('savingIndicator') || 'Saving changes...');
-    indicator.attr('aria-label', 'Saving changes');
+    indicator.classList.add('status-saving');
+    icon.setAttribute('src', 'assets/auto_saving.svg');
+    indicator.setAttribute('title', chrome.i18n.getMessage('savingIndicator') || 'Saving changes...');
+    indicator.setAttribute('aria-label', 'Saving changes');
   } else if (currentTab.isSaved()) {
-    indicator.addClass('status-saved');
-    icon.attr('src', 'assets/autosaved.svg');
-    indicator.attr('title', chrome.i18n.getMessage('savedIndicator') || 'All changes saved');
-    indicator.attr('aria-label', 'All changes saved');
+    indicator.classList.add('status-saved');
+    icon.setAttribute('src', 'assets/autosaved.svg');
+    indicator.setAttribute('title', chrome.i18n.getMessage('savedIndicator') || 'All changes saved');
+    indicator.setAttribute('aria-label', 'All changes saved');
   } else {
-    indicator.addClass('status-unsaved');
-    icon.attr('src', 'assets/save.svg');
-    indicator.attr('title', chrome.i18n.getMessage('unsavedIndicator') || 'Unsaved changes - click to save');
-    indicator.attr('aria-label', 'Unsaved changes');
+    indicator.classList.add('status-unsaved');
+    icon.setAttribute('src', 'assets/save.svg');
+    indicator.setAttribute('title', chrome.i18n.getMessage('unsavedIndicator') || 'Unsaved changes - click to save');
+    indicator.setAttribute('aria-label', 'Unsaved changes');
   }
 };
 
 WindowController.prototype.onLoadingFile = function(e) {
   this.setTitleText_(chrome.i18n.getMessage('loadingTitle'));
-  $('#autosave-indicator').hide();
+  var indicator = document.getElementById('autosave-indicator');
+  if (indicator) indicator.style.display = 'none';
 };
 
 WindowController.prototype.onFileSystemError = function(e) {
   this.setTitleText_(chrome.i18n.getMessage('errorTitle'));
-  $('#autosave-indicator').hide();
+  var indicator = document.getElementById('autosave-indicator');
+  if (indicator) indicator.style.display = 'none';
 };
 
-WindowController.prototype.onChangeTab_ = function(e, tab) {
+WindowController.prototype.onChangeTab_ = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
   if (tab) {
     this.setTitleText_(tab.getName());
-    this.onTabPathChange(e, tab);
+    this.onTabPathChange(opt_e, tab);
   }
   this.onTabChange_();
 };
 
-WindowController.prototype.onTabPathChange = function(e, tab) {
+WindowController.prototype.onTabPathChange = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
   var path = (tab && tab.getPath()) || '';
   if (tab && tab.isMissing()) {
     path = path ? (path + ' (File missing)') : 'File missing';
   }
-  $('#title-filename').attr('title', path);
+  var titleEl = document.getElementById('title-filename');
+  if (titleEl) titleEl.setAttribute('title', path);
 };
 
-WindowController.prototype.onTabChange_ = function(e, tab) {
+WindowController.prototype.onTabChange_ = function(opt_e, opt_tab) {
   var currentTab = this.tabs_.getCurrentTab();
-  if (currentTab && currentTab.isSaved()) {
-    $('#title-filename').removeClass('unsaved');
-  } else {
-    $('#title-filename').addClass('unsaved');
+  var titleEl = document.getElementById('title-filename');
+  if (titleEl) {
+    if (currentTab && currentTab.isSaved()) {
+      titleEl.classList.remove('unsaved');
+    } else {
+      titleEl.classList.add('unsaved');
+    }
   }
   this.updateAutosaveIndicator_();
 };
 
-WindowController.prototype.onTabMissingChange_ = function(e, tab) {
-  this.onTabPathChange(e, tab);
+WindowController.prototype.onTabMissingChange_ = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  this.onTabPathChange(opt_e, tab);
   this.updateAutosaveIndicator_();
 };
 
@@ -306,42 +355,48 @@ WindowController.prototype.onSettingsChange_ = function(e, key, value) {
 
 WindowController.prototype.resizeStart_ = function(e) {
   this.resizeMouseStartX_ = e.clientX;
-  this.resizeStartWidth_ = parseInt($('#sidebar').css('width'), 10);
-  $(document).on('mousemove.sidebar', this.resizeOnMouseMove_.bind(this));
-  $(document).on('mouseup.sidebar', this.resizeFinish_.bind(this));
-  $(document).css('cursor', 'e-resize !important');
-  $('#sidebar').css('-webkit-transition', 'none');
+  var sidebar = document.getElementById('sidebar');
+  this.resizeStartWidth_ = sidebar ? parseInt(window.getComputedStyle(sidebar).width, 10) : 220;
+  this.boundResizeOnMouseMove_ = this.resizeOnMouseMove_.bind(this);
+  this.boundResizeFinish_ = this.resizeFinish_.bind(this);
+  document.addEventListener('mousemove', this.boundResizeOnMouseMove_);
+  document.addEventListener('mouseup', this.boundResizeFinish_);
+  document.body.style.cursor = 'e-resize';
+  if (sidebar) sidebar.style.transition = 'none';
 };
 
 WindowController.prototype.resizeOnMouseMove_ = function(e) {
   var change = e.clientX - this.resizeMouseStartX_;
   var sidebarWidth = this.resizeStartWidth_ + change;
   if (sidebarWidth < 20) sidebarWidth = 20;
-  $('#sidebar').css('width', sidebarWidth + 'px');
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.style.width = sidebarWidth + 'px';
   return sidebarWidth;
 };
 
 WindowController.prototype.resizeFinish_ = function(e) {
   var sidebarWidth = this.resizeOnMouseMove_(e);
   this.settings_.set('sidebarwidth', sidebarWidth);
-  $(document).off('mousemove.sidebar');
-  $(document).off('mouseup.sidebar');
-  $(document).css('cursor', 'default');
-  $('#sidebar').css('-webkit-transition', 'width 0.2s ease-in-out');
+  document.removeEventListener('mousemove', this.boundResizeOnMouseMove_);
+  document.removeEventListener('mouseup', this.boundResizeFinish_);
+  document.body.style.cursor = '';
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.style.transition = 'width 0.2s ease-in-out';
 };
 
 WindowController.prototype.updateSidebarVisibility_ = function() {
-  const sidebar = $('#sidebar');
-  if (sidebar.width() === 0) {
-    sidebar.css('visibility', 'hidden');
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  if (parseInt(sidebar.style.width || '0', 10) === 0 || sidebar.offsetWidth === 0) {
+    sidebar.style.visibility = 'hidden';
   } else {
-    sidebar.css('visibility', 'visible');
+    sidebar.style.visibility = 'visible';
   }
 };
 
 WindowController.prototype.onError_ = function(event) {
-  var message = event.originalEvent.message;
-  var errorStack = event.originalEvent.error.stack;
+  var message = (event && event.message) || (event && event.originalEvent && event.originalEvent.message);
+  var errorStack = (event && event.error && event.error.stack) || (event && event.originalEvent && event.originalEvent.error && event.originalEvent.error.stack);
 };
 
 /**

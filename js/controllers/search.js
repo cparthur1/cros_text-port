@@ -9,42 +9,67 @@ function SearchController(search) {
   // to understand why but for now drop the extra events to prevent errors.
   this.activating_ = false;
 
-  document.getElementById('search-input')
-      .addEventListener('focus', () => { this.activateSearch_(); });
-  $('#search-input').bind('input', this.onChange_.bind(this));
-  $('#search-input').keydown(this.onKeydown_.bind(this));
+  this.searchInput_ = document.getElementById('search-input');
+  this.replaceInput_ = document.getElementById('replace-input');
+  this.searchCounting_ = document.getElementById('search-counting');
+  this.searchContainer_ = document.querySelector('.search-container');
+  this.header_ = document.querySelector('header');
+
+  if (this.searchInput_) {
+    this.searchInput_.addEventListener('focus', () => { this.activateSearch_(); });
+    this.searchInput_.addEventListener('input', this.onChange_.bind(this));
+    this.searchInput_.addEventListener('keydown', this.onKeydown_.bind(this));
+  }
+
   // Prevent search deactivation when search count is clicked
-  document.getElementById('search-counting')
-      .addEventListener('mousedown', (event) => { event.preventDefault(); });
-  $('#search-next-button').click(this.onFindNext_.bind(this));
-  $('#search-previous-button').click(this.onFindPrevious_.bind(this));
-  $('#search-toggle-replace').click(this.toggleReplace_.bind(this));
+  if (this.searchCounting_) {
+    this.searchCounting_.addEventListener('mousedown', (event) => { event.preventDefault(); });
+  }
 
-  $('#replace-input').bind('input', this.onReplaceChange_.bind(this));
-  $('#replace-input').keydown(this.onReplaceKeydown_.bind(this));
-  $('#replace-button').click(this.onReplaceNext_.bind(this));
-  $('#replace-all-button').click(this.onReplaceAll_.bind(this));
+  var nextBtn = document.getElementById('search-next-button');
+  if (nextBtn) nextBtn.addEventListener('click', this.onFindNext_.bind(this));
 
-  $('.search-container').focusout(this.deactivateSearch_.bind(this));
+  var prevBtn = document.getElementById('search-previous-button');
+  if (prevBtn) prevBtn.addEventListener('click', this.onFindPrevious_.bind(this));
 
-  $(document).bind('opensearch', this.activateSearch_.bind(this));
-  $(document).bind('openreplace', this.activateReplace_.bind(this));
+  var toggleReplaceBtn = document.getElementById('search-toggle-replace');
+  if (toggleReplaceBtn) toggleReplaceBtn.addEventListener('click', this.toggleReplace_.bind(this));
+
+  if (this.replaceInput_) {
+    this.replaceInput_.addEventListener('input', this.onReplaceChange_.bind(this));
+    this.replaceInput_.addEventListener('keydown', this.onReplaceKeydown_.bind(this));
+  }
+
+  var replaceBtn = document.getElementById('replace-button');
+  if (replaceBtn) replaceBtn.addEventListener('click', this.onReplaceNext_.bind(this));
+
+  var replaceAllBtn = document.getElementById('replace-all-button');
+  if (replaceAllBtn) replaceAllBtn.addEventListener('click', this.onReplaceAll_.bind(this));
+
+  if (this.searchContainer_) {
+    this.searchContainer_.addEventListener('focusout', this.deactivateSearch_.bind(this));
+  }
+
+  document.addEventListener('opensearch', this.activateSearch_.bind(this));
+  document.addEventListener('openreplace', this.activateReplace_.bind(this));
 }
 
 /** @return {number} Number of search results. */
 SearchController.prototype.updateSearchCount_ = function() {
-  if ($('#search-input').val().length === 0) {
-    $('#search-counting').text('');
+  if (!this.searchInput_ || this.searchInput_.value.length === 0) {
+    if (this.searchCounting_) this.searchCounting_.textContent = '';
     return 0;
   }
   var searchCount = this.search_.getResultsCount();
   var searchIndex = this.search_.getCurrentIndex();
-  $('#search-counting').text(chrome.i18n.getMessage('searchCounting',
-      [searchIndex, searchCount]));
-  if (searchCount === 0) {
-    $('#search-counting').addClass('nomatches');
-  } else {
-    $('#search-counting').removeClass('nomatches');
+  if (this.searchCounting_) {
+    this.searchCounting_.textContent = chrome.i18n.getMessage('searchCounting',
+        [searchIndex, searchCount]);
+    if (searchCount === 0) {
+      this.searchCounting_.classList.add('nomatches');
+    } else {
+      this.searchCounting_.classList.remove('nomatches');
+    }
   }
   return searchCount;
 };
@@ -67,8 +92,12 @@ SearchController.prototype.activateSearch_ = function() {
 
   this.activating_ = true;
   this.search_.activate();
-  document.getElementById('search-input').select();
-  $('header').addClass('search-active');
+  if (this.searchInput_) {
+    this.searchInput_.select();
+  }
+  if (this.header_) {
+    this.header_.classList.add('search-active');
+  }
   this.activating_ = false;
 };
 
@@ -78,12 +107,16 @@ SearchController.prototype.activateSearch_ = function() {
  */
 SearchController.prototype.activateReplace_ = function() {
   this.activateSearch_();
-  $('.search-container').addClass('replace-active');
-  if ($('#search-input').val().length > 0) {
-    document.getElementById('replace-input').focus();
-    document.getElementById('replace-input').select();
-  } else {
-    document.getElementById('search-input').focus();
+  if (this.searchContainer_) {
+    this.searchContainer_.classList.add('replace-active');
+  }
+  if (this.searchInput_ && this.searchInput_.value.length > 0) {
+    if (this.replaceInput_) {
+      this.replaceInput_.focus();
+      this.replaceInput_.select();
+    }
+  } else if (this.searchInput_) {
+    this.searchInput_.focus();
   }
 };
 
@@ -92,9 +125,9 @@ SearchController.prototype.activateReplace_ = function() {
  * @private
  */
 SearchController.prototype.toggleReplace_ = function() {
-  if ($('.search-container').hasClass('replace-active')) {
-    $('.search-container').removeClass('replace-active');
-    document.getElementById('search-input').focus();
+  if (this.searchContainer_ && this.searchContainer_.classList.contains('replace-active')) {
+    this.searchContainer_.classList.remove('replace-active');
+    if (this.searchInput_) this.searchInput_.focus();
   } else {
     this.activateReplace_();
   }
@@ -107,19 +140,22 @@ SearchController.prototype.deactivateSearch_ = function(e) {
 
   // relatedTarget is null if the element clicked on can't receive focus
   if (!e.relatedTarget || !e.relatedTarget.closest('.search-container')) {
-    $('#search-input').val('');
-    $('#replace-input').val('');
-    $('#search-counting').text('');
-    $('header').removeClass('search-active');
-    $('.search-container').removeClass('replace-active');
-    $('.search-navigation-button').removeClass('has-results');
+    if (this.searchInput_) this.searchInput_.value = '';
+    if (this.replaceInput_) this.replaceInput_.value = '';
+    if (this.searchCounting_) this.searchCounting_.textContent = '';
+    if (this.header_) this.header_.classList.remove('search-active');
+    if (this.searchContainer_) this.searchContainer_.classList.remove('replace-active');
+    var navBtns = document.querySelectorAll('.search-navigation-button');
+    for (var i = 0; i < navBtns.length; i++) {
+      navBtns[i].classList.remove('has-results');
+    }
     this.search_.setReplaceText('');
     this.search_.deactivate();
   }
 };
 
 SearchController.prototype.onChange_ = function() {
-  var searchString = $('#search-input').val();
+  var searchString = this.searchInput_ ? this.searchInput_.value : '';
   if (searchString === this.search_.getQuery())
     return;
 
@@ -127,15 +163,20 @@ SearchController.prototype.onChange_ = function() {
   const numResults = this.updateSearchCount_();
 
   // Only show the Prev and Next buttons if there are search results.
-  if (numResults > 0) {
-    $('.search-navigation-button').addClass('has-results');
-  } else {
-    $('.search-navigation-button').removeClass('has-results');
+  var navBtns = document.querySelectorAll('.search-navigation-button');
+  for (var i = 0; i < navBtns.length; i++) {
+    if (numResults > 0) {
+      navBtns[i].classList.add('has-results');
+    } else {
+      navBtns[i].classList.remove('has-results');
+    }
   }
 };
 
 SearchController.prototype.onReplaceChange_ = function() {
-  this.search_.setReplaceText($('#replace-input').val());
+  if (this.replaceInput_) {
+    this.search_.setReplaceText(this.replaceInput_.value);
+  }
 };
 
 SearchController.prototype.onKeydown_ = function(e) {
@@ -182,15 +223,21 @@ SearchController.prototype.onFindPrevious_ = function() {
 SearchController.prototype.onReplaceNext_ = function() {
   this.search_.replaceNext();
   const numResults = this.updateSearchCount_();
-  if (numResults > 0) {
-    $('.search-navigation-button').addClass('has-results');
-  } else {
-    $('.search-navigation-button').removeClass('has-results');
+  var navBtns = document.querySelectorAll('.search-navigation-button');
+  for (var i = 0; i < navBtns.length; i++) {
+    if (numResults > 0) {
+      navBtns[i].classList.add('has-results');
+    } else {
+      navBtns[i].classList.remove('has-results');
+    }
   }
 };
 
 SearchController.prototype.onReplaceAll_ = function() {
   this.search_.replaceAll();
   this.updateSearchCount_();
-  $('.search-navigation-button').removeClass('has-results');
+  var navBtns = document.querySelectorAll('.search-navigation-button');
+  for (var i = 0; i < navBtns.length; i++) {
+    navBtns[i].classList.remove('has-results');
+  }
 };

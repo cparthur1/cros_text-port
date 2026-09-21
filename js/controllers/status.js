@@ -16,10 +16,10 @@ function StatusController(editor, tabs) {
   this.modeEl_ = document.getElementById('status-mode');
   this.encodingEl_ = document.getElementById('status-encoding');
 
-  $(document).bind('cursoractivity', this.onCursorActivity_.bind(this));
-  $(document).bind('switchtab', this.onTabSwitched_.bind(this));
-  $(document).bind('tabrenamed', this.onTabSwitched_.bind(this));
-  $(document).bind('tabpathchange', this.onTabSwitched_.bind(this));
+  document.addEventListener('cursoractivity', (e) => this.onCursorActivity_(e.detail || e));
+  document.addEventListener('switchtab', (e) => this.onTabSwitched_(e.detail || e));
+  document.addEventListener('tabrenamed', (e) => this.onTabSwitched_(e.detail || e));
+  document.addEventListener('tabpathchange', (e) => this.onTabSwitched_(e.detail || e));
 
   if (this.lineEndingEl_) {
     this.lineEndingEl_.addEventListener('click', this.toggleLineEnding_.bind(this));
@@ -28,11 +28,12 @@ function StatusController(editor, tabs) {
 
 /**
  * Handles cursor position, selection, and document stats changes.
- * @param {Event} e
- * @param {Object} data
+ * @param {Event|Object} e
+ * @param {Object=} opt_data
  * @private
  */
-StatusController.prototype.onCursorActivity_ = function(e, data) {
+StatusController.prototype.onCursorActivity_ = function(e, opt_data) {
+  var data = opt_data || (e && e.detail) || e;
   if (!data) return;
 
   if (this.cursorEl_) {
@@ -93,8 +94,11 @@ StatusController.prototype.formatModeName_ = function(mode) {
  * @param {Tab=} opt_tab
  * @private
  */
-StatusController.prototype.onTabSwitched_ = function(e, opt_tab) {
-  var currentTab = opt_tab || (this.tabs_ && this.tabs_.getCurrentTab());
+StatusController.prototype.onTabSwitched_ = function(opt_e, opt_tab) {
+  var currentTab = opt_tab || (opt_e && opt_e.detail) || (this.tabs_ && this.tabs_.getCurrentTab());
+  if (!currentTab || typeof currentTab.getExtension !== 'function') {
+    currentTab = this.tabs_ && this.tabs_.getCurrentTab();
+  }
   if (!currentTab) return;
 
   if (this.lineEndingEl_) {

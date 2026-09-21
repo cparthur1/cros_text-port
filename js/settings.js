@@ -20,7 +20,7 @@ function Settings() {
       window.matchMedia('(prefers-color-scheme: dark)');
   this.colorSchemeMatcherDark_.addEventListener('change', () => {
     if (this.settings_['theme'] === 'default') {
-      $.event.trigger('settingschange', ['theme', this.get('theme')]);
+      util.triggerEvent('settingschange', { key: 'theme', value: this.get('theme') });
     }
   });
 }
@@ -94,7 +94,7 @@ Settings.prototype.getSettingsCallback_ = function(settings) {
     key = key.substring(9);
     this.settings_[key] = value;
   }
-  $.event.trigger('settingsready');
+  util.triggerEvent('settingsready');
 };
 
 Settings.prototype.onChanged_ = function(changes, areaName) {
@@ -109,6 +109,6 @@ Settings.prototype.onChanged_ = function(changes, areaName) {
     key = key.substring(9);
     console.log('Settings changed:', key, value);
     this.settings_[key] = value;
-    $.event.trigger('settingschange', [key, value]);
+    util.triggerEvent('settingschange', { key: key, value: value });
   }
 };

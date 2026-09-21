@@ -24,7 +24,7 @@ util.fsErrorStr = function(e) {
 };
 
 util.handleFSError = function(e) {
-  $.event.trigger('filesystemerror');
+  util.triggerEvent('filesystemerror');
   console.warn('FS Error:', util.fsErrorStr(e), e);
 };
 
@@ -115,4 +115,14 @@ util.showToast = function(message, opt_duration) {
     toast.classList.remove('show');
   }, opt_duration || 3000);
 };
+
+/**
+ * Dispatches a CustomEvent on document for modern vanilla DOM event bus.
+ * @param {string} eventName
+ * @param {*=} detail
+ */
+util.triggerEvent = function(eventName, detail) {
+  document.dispatchEvent(new CustomEvent(eventName, { detail: detail }));
+};
+
 

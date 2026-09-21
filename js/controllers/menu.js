@@ -4,28 +4,55 @@
 function MenuController(tabs) {
   this.tabs_ = tabs;
   this.dragItem_ = null;
-  $('#file-menu-new').click(this.newTab_.bind(this));
-  $('#file-menu-open').click(this.open_.bind(this));
-  $('#file-menu-save').click(this.save_.bind(this));
-  $('#file-menu-saveas').click(this.saveas_.bind(this));
-  $('#open-shortcuts').click(this.openShortcuts_.bind(this));
-  $(document).bind('newtab', this.addNewTab_.bind(this));
-  $(document).bind('switchtab', this.onSwitchTab.bind(this));
-  $(document).bind('tabchange', this.onTabChange.bind(this));
-  $(document).bind('tabclosed', this.onTabClosed.bind(this));
-  $(document).bind('tabpathchange', this.onTabPathChange.bind(this));
-  $(document).bind('tabrenamed', this.onTabRenamed.bind(this));
-  $(document).bind('tabmissingchange', this.onTabMissingChange.bind(this));
-  $(document).bind('tabsave', this.onTabSave.bind(this));
+
+  var newBtn = document.getElementById('file-menu-new');
+  if (newBtn) newBtn.addEventListener('click', this.newTab_.bind(this));
+
+  var openBtn = document.getElementById('file-menu-open');
+  if (openBtn) openBtn.addEventListener('click', this.open_.bind(this));
+
+  var saveBtn = document.getElementById('file-menu-save');
+  if (saveBtn) saveBtn.addEventListener('click', this.save_.bind(this));
+
+  var saveasBtn = document.getElementById('file-menu-saveas');
+  if (saveasBtn) saveasBtn.addEventListener('click', this.saveas_.bind(this));
+
+  var shortcutsBtn = document.getElementById('open-shortcuts');
+  if (shortcutsBtn) shortcutsBtn.addEventListener('click', this.openShortcuts_.bind(this));
+
+  document.addEventListener('newtab', (e) => this.addNewTab_(this.resolveTab_(e)));
+  document.addEventListener('switchtab', (e) => this.onSwitchTab(this.resolveTab_(e)));
+  document.addEventListener('tabchange', (e) => this.onTabChange(this.resolveTab_(e)));
+  document.addEventListener('tabclosed', (e) => this.onTabClosed(this.resolveTab_(e)));
+  document.addEventListener('tabpathchange', (e) => this.onTabPathChange(this.resolveTab_(e)));
+  document.addEventListener('tabrenamed', (e) => this.onTabRenamed(this.resolveTab_(e)));
+  document.addEventListener('tabmissingchange', (e) => this.onTabMissingChange(this.resolveTab_(e)));
+  document.addEventListener('tabsave', (e) => this.onTabSave(this.resolveTab_(e)));
 }
 
 /**
- * Adds a new draggable file tab to the UI.
- * @param {!Event} e The newtab event (unused).
- * @param {!Tab} tab The new tab to be added.
+ * Resolves Tab instance whether passed as an event or direct argument.
+ * @param {*=} opt_e
+ * @param {*=} opt_tab
+ * @return {Tab}
  * @private
  */
-MenuController.prototype.addNewTab_ = function(e, tab) {
+MenuController.prototype.resolveTab_ = function(opt_e, opt_tab) {
+  if (opt_tab) return opt_tab;
+  if (opt_e && opt_e.detail) return opt_e.detail;
+  return opt_e;
+};
+
+/**
+ * Adds a new draggable file tab to the UI.
+ * @param {!Event|!Tab} e The newtab event or tab.
+ * @param {!Tab=} opt_tab The new tab to be added.
+ * @private
+ */
+MenuController.prototype.addNewTab_ = function(e, opt_tab) {
+  const tab = this.resolveTab_(e, opt_tab);
+  if (!tab) return;
+
   const id = tab.getId();
   const tabElement = document.createElement('li');
   tabElement.setAttribute('draggable', 'true');
@@ -55,18 +82,18 @@ MenuController.prototype.addNewTab_ = function(e, tab) {
   tabElement.appendChild(filenameElement);
   const closeElement = document.createElement('button');
   closeElement.textContent = 'close';
-  closeElement.setAttribute('title', chrome.i18n.getMessage('closeFileButton'))
+  closeElement.setAttribute('title', chrome.i18n.getMessage('closeFileButton'));
   closeElement.classList.add('close', 'mdc-icon-button', 'material-icons');
   mdc.ripple.MDCRipple.attachTo(closeElement).unbounded = true;
   tabElement.appendChild(closeElement);
   document.getElementById('tabs-list').appendChild(tabElement);
 
   tabElement.addEventListener(
-      'dragstart', () => { this.onDragStart_($(tabElement)); });
+      'dragstart', () => { this.onDragStart_(tabElement); });
   tabElement.addEventListener(
-      'dragover', (event) => { this.onDragOver_($(tabElement), event); });
+      'dragover', (event) => { this.onDragOver_(tabElement, event); });
   tabElement.addEventListener(
-      'dragend', (event) => { this.onDragEnd_($(tabElement), event)});
+      'dragend', (event) => { this.onDragEnd_(tabElement, event); });
   tabElement.addEventListener(
       'drop', (event) => { this.onDrop_(event); });
   filenameElement.addEventListener(
@@ -77,9 +104,13 @@ MenuController.prototype.addNewTab_ = function(e, tab) {
 
 MenuController.prototype.onDragStart_ = function(listItem) {
   this.dragItem_ = listItem;
+  listItem.classList.add('dragging');
 };
 
 MenuController.prototype.onDragEnd_ = function(listItem, e) {
+  if (this.dragItem_) {
+    this.dragItem_.classList.remove('dragging');
+  }
   this.dragItem_ = null;
   e.preventDefault();
   e.stopPropagation();
@@ -91,68 +122,100 @@ MenuController.prototype.onDrop_ = function(e) {
 
 MenuController.prototype.onDragOver_ = function(overItem, e) {
   e.preventDefault();
-  if (!this.dragItem_ || overItem.find('.filename').attr('id')
-      === this.dragItem_.find('.filename').attr('id')) {
+  if (!this.dragItem_ || overItem === this.dragItem_) {
     return;
   }
 
-  if (this.dragItem_.index() < overItem.index()) {
+  var parent = overItem.parentNode;
+  var items = Array.from(parent.children);
+  var dragIdx = items.indexOf(this.dragItem_);
+  var overIdx = items.indexOf(overItem);
+  if (dragIdx === -1 || overIdx === -1) return;
+
+  if (dragIdx < overIdx) {
     overItem.after(this.dragItem_);
   } else {
     overItem.before(this.dragItem_);
   }
-  this.tabs_.reorder(this.dragItem_.index(), overItem.index());
+  this.tabs_.reorder(dragIdx, overIdx);
 };
 
-MenuController.prototype.onTabRenamed = function(e, tab) {
-  const tabBtn = $('#tab' + tab.getId() + '.filename');
-  const textSpan = tabBtn.find('.tab-text');
-  if (textSpan.length) {
-    textSpan.text(tab.getName());
+MenuController.prototype.onTabRenamed = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (!tabBtn) return;
+  var textSpan = tabBtn.querySelector('.tab-text');
+  if (textSpan) {
+    textSpan.textContent = tab.getName();
   } else {
-    tabBtn.text(tab.getName());
+    tabBtn.textContent = tab.getName();
   }
   this.tabs_.modeAutoSet(tab);
 };
 
-MenuController.prototype.onTabMissingChange = function(e, tab) {
-  const tabBtn = $('#tab' + tab.getId() + '.filename');
-  const missingIcon = tabBtn.find('.missing-file-icon');
+MenuController.prototype.onTabMissingChange = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (!tabBtn) return;
+  var missingIcon = tabBtn.querySelector('.missing-file-icon');
   if (tab.isMissing()) {
-    tabBtn.addClass('missing-file');
-    missingIcon.show();
-    tabBtn.attr('title', tab.getPath() ? (tab.getPath() + ' (File missing)') : 'File missing');
+    tabBtn.classList.add('missing-file');
+    if (missingIcon) missingIcon.style.display = '';
+    tabBtn.setAttribute('title', tab.getPath() ? (tab.getPath() + ' (File missing)') : 'File missing');
   } else {
-    tabBtn.removeClass('missing-file');
-    missingIcon.hide();
-    tabBtn.attr('title', tab.getPath() || '');
+    tabBtn.classList.remove('missing-file');
+    if (missingIcon) missingIcon.style.display = 'none';
+    tabBtn.setAttribute('title', tab.getPath() || '');
   }
 };
 
-MenuController.prototype.onTabPathChange = function(e, tab) {
-  const title = tab.isMissing() ?
+MenuController.prototype.onTabPathChange = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (!tabBtn) return;
+  var title = tab.isMissing() ?
       (tab.getPath() ? tab.getPath() + ' (File missing)' : 'File missing') :
       (tab.getPath() || '');
-  $('#tab' + tab.getId() + '.filename').attr('title', title);
+  tabBtn.setAttribute('title', title);
 };
 
-MenuController.prototype.onTabChange = function(e, tab) {
-  $('#tab' + tab.getId()).addClass('unsaved');
+MenuController.prototype.onTabChange = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (tabBtn) tabBtn.classList.add('unsaved');
 };
 
-MenuController.prototype.onTabClosed = function(e, tab) {
-  $('#tab' + tab.getId()).parent().remove();
+MenuController.prototype.onTabClosed = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (tabBtn && tabBtn.parentElement) {
+    tabBtn.parentElement.remove();
+  }
 };
 
-MenuController.prototype.onTabSave = function(e, tab) {
-  $('#tab' + tab.getId()).removeClass('unsaved');
+MenuController.prototype.onTabSave = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (tabBtn) tabBtn.classList.remove('unsaved');
 };
 
-MenuController.prototype.onSwitchTab = function(e, tab) {
-  // Add the .active class to the <li> wrapping the tab button so the <li> gets
-  // the active background-color style.
-  $('#tabs-list .active').removeClass('active');
-  $('#tab' + tab.getId()).parent().addClass('active');
+MenuController.prototype.onSwitchTab = function(opt_e, opt_tab) {
+  var tab = this.resolveTab_(opt_e, opt_tab);
+  if (!tab) return;
+  var activeElements = document.querySelectorAll('#tabs-list .active');
+  for (var i = 0; i < activeElements.length; i++) {
+    activeElements[i].classList.remove('active');
+  }
+  var tabBtn = document.getElementById('tab' + tab.getId());
+  if (tabBtn && tabBtn.parentElement) {
+    tabBtn.parentElement.classList.add('active');
+  }
 };
 
 MenuController.prototype.newTab_ = function() {
@@ -187,8 +250,8 @@ MenuController.prototype.tabButtonClicked_ = function(id) {
 
 /**
  * Closes a file tab, removing it from the UI.
- * @param {!Event} The triggering click event.
- * @param {number} The id of the tab to close.
+ * @param {!Event} e The triggering click event.
+ * @param {number} id The id of the tab to close.
  */
 MenuController.prototype.closeTab_ = function(e, id) {
   this.tabs_.close(id);

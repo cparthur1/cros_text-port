@@ -107,4 +107,10 @@ var i18nTemplate = (function() {
   };
 }());
 
-$(document).ready(i18nTemplate.process(document));
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    i18nTemplate.process(document);
+  });
+} else {
+  i18nTemplate.process(document);
+}
