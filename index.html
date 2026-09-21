@@ -32,7 +32,7 @@
   <link href="css/app.css" rel="stylesheet">
   <link href="css/print.css" rel="stylesheet" media="print">
 </head>
-<body>
+<body theme="light">
   <div id="window-container">
     <div id="sidebar">
       <div id="sidebar-resizer"></div>
@@ -69,6 +69,35 @@
                 class="sidebar-button"
                 i18n-content="fileMenuSaveas">
             </button>
+          </li>
+          <li>
+            <button
+                id="file-menu-saveapp"
+                class="sidebar-button"
+                title="Save current file to WebApp Storage (max 5 saves, 1MB each)">
+              <span class="file-menu-icon material-icons">save</span>
+              <span i18n-content="fileMenuSaveApp">Save on the app</span>
+            </button>
+          </li>
+          <li id="app-storage-folder-item" class="app-storage-folder-item">
+            <button
+                id="file-menu-appfolder"
+                class="sidebar-button app-folder-button"
+                title="View files saved on the app">
+              <span class="app-folder-icon material-icons">folder</span>
+              <span class="app-folder-label" i18n-content="appStorageSavedInApp">Saved in App</span>
+              <span id="app-storage-count" class="app-storage-count">(0/5)</span>
+              <span id="app-storage-chevron" class="app-storage-chevron material-icons">expand_more</span>
+            </button>
+            <div id="app-storage-folder-content" class="app-storage-folder-content" style="display: none;">
+              <ul id="app-storage-file-list" class="app-storage-file-list"></ul>
+              <div id="app-storage-folder-actions" class="app-storage-folder-actions">
+                <button id="app-storage-save-current" class="app-storage-action-btn" title="Save current document to this folder">
+                  <span class="material-icons">add</span>
+                  <span>Save current file</span>
+                </button>
+              </div>
+            </div>
           </li>
         </ul>
 
@@ -336,6 +365,7 @@
   <script src="js/controllers/settings.js" type="text/javascript"></script>
   <script src="js/controllers/status.js" type="text/javascript"></script>
   <script src="js/controllers/symbols.js" type="text/javascript"></script>
+  <script src="js/controllers/app_storage.js" type="text/javascript"></script>
   <script src="js/tabs.js" type="text/javascript"></script>
   <script src="js/controllers/window.js" type="text/javascript"></script>
   <script src="js/app.js" type="text/javascript"></script>

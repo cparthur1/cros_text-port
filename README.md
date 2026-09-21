@@ -17,10 +17,13 @@ While the original Chrome app was archived and built around legacy Chrome Apps A
 * **Launch Queue Support**: Cold starts open files instantly; launching files while running focuses the existing window and opens the file in a new tab (`focus-existing`).
 * **Drag & Drop**: Drop files straight from your desktop or file manager into the window to open them.
 * **External Modification Detection**: Automatically detects if an open file has been changed outside the editor and prompts to reload.
+* **In-App Web Storage ("Save on the app")**: Save files directly into the webapp internal storage (up to 5 saves, max 1MB per file), organized in a folder button right below "Save as" in the sidebar.
+* **Temp Save & Unsaved Recovery**: Protects active documents that are not yet autosaved to device storage in app storage (1MB limit), prompting to fix and save them to device storage upon app restart.
 * **Session Persistence**: Restores previously open tabs across browser restarts, with graceful indicators for moved or missing files.
 
 ### ✍️ Modern Editing Experience
 * **Zero jQuery / Pure Vanilla DOM**: Completely modernized codebase using native DOM APIs.
+* **High-Contrast Theming**: Explicit theme definitions and `color-scheme` controls ensuring high contrast and zero white-on-white text across light, dark, and system themes.
 * **CodeMirror 6 Powered**: Fast, extensible syntax highlighting and modern editor core.
 * **Autosave with Frame Animation**: Edits automatically save in the background with a 2-frame saving indicator (`auto_saving_frame1.svg` / `auto_saving_frame2.svg`) and clear visual status indicators (saved, saving, error, missing).
 * **Find and Replace (`Ctrl+F` / `Ctrl+H`)**: Search with live match counts, match navigation, inline replace, and replace-all.

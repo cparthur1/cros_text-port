@@ -19,6 +19,14 @@
     "message": "Save as",
     "description": "The text of the File Menu 'Save as'."
   },
+  "fileMenuSaveApp": {
+    "message": "Save on the app",
+    "description": "The text of the File Menu 'Save on the app'."
+  },
+  "appStorageSavedInApp": {
+    "message": "Saved in App",
+    "description": "Label for the in-app storage folder."
+  },
   "menuSettings": {
     "message": "Settings",
     "description": "The text of the Menu 'Settings'."

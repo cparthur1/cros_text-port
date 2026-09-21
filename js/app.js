@@ -113,6 +113,8 @@ TextApp.prototype.initControllers_ = function() {
   this.searchController_ = new SearchController(this.editor_.getSearch());
   this.symbolsController_ = new SymbolsController(this.editor_);
   this.hotbarController_ = new HotbarController(this.editor_);
+  this.appStorageController_ = new AppStorageController(
+      this.editor_, this.tabs_, this.dialogController_);
 };
 
 /**
