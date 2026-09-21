@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Sulje tiedosto",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Vaihda korvaustoiminto (Ctrl+H)",
+    "description": "Painikkeen teksti etsi ja korvaa -tilan vaihtamiseksi."
+  },
+  "replacePlaceholder": {
+    "message": "Korvaa...",
+    "description": "Paikkamerkkiteksti korvauskentässä."
+  },
+  "replaceButton": {
+    "message": "Korvaa",
+    "description": "Painikkeen teksti nykyisen osuman korvaamiseksi."
+  },
+  "replaceButtonTitle": {
+    "message": "Korvaa (Enter)",
+    "description": "Työkaluvihje korvaa-painikkeelle."
+  },
+  "replaceAllButton": {
+    "message": "Kaikki",
+    "description": "Painikkeen teksti kaikkien osumien korvaamiseksi."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Korvaa kaikki",
+    "description": "Työkaluvihje korvaa kaikki -painikkeelle."
   }
 }

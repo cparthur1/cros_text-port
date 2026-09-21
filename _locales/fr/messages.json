@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Fermer le fichier",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Basculer remplacer (Ctrl+H)",
+    "description": "Le texte du bouton pour basculer en mode recherche et remplacement."
+  },
+  "replacePlaceholder": {
+    "message": "Remplacer...",
+    "description": "Le texte de remplacement dans le champ de saisie."
+  },
+  "replaceButton": {
+    "message": "Remplacer",
+    "description": "Le texte du bouton pour remplacer la correspondance actuelle."
+  },
+  "replaceButtonTitle": {
+    "message": "Remplacer (Entrée)",
+    "description": "Info-bulle du bouton remplacer."
+  },
+  "replaceAllButton": {
+    "message": "Tout",
+    "description": "Le texte du bouton pour remplacer toutes les correspondances."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Tout remplacer",
+    "description": "Info-bulle du bouton tout remplacer."
   }
 }

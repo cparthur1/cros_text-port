@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "ファイルを閉じる",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "置換を切り替え (Ctrl+H)",
+    "description": "検索と置換モードを切り替えるボタンのテキスト。"
+  },
+  "replacePlaceholder": {
+    "message": "置換...",
+    "description": "置換入力のプレースホルダーテキスト。"
+  },
+  "replaceButton": {
+    "message": "置換",
+    "description": "現在の一致を置換するボタンのテキスト。"
+  },
+  "replaceButtonTitle": {
+    "message": "置換 (Enter)",
+    "description": "置換ボタンのツールチップ。"
+  },
+  "replaceAllButton": {
+    "message": "すべて",
+    "description": "すべての一致を置換するボタンのテキスト。"
+  },
+  "replaceAllButtonTitle": {
+    "message": "すべて置換",
+    "description": "すべて置換ボタンのツールチップ。"
   }
 }

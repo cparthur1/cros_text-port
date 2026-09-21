@@ -174,5 +174,29 @@
   "closeFileButton": {
     "message": "關閉檔案",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "切換取代 (Ctrl+H)",
+    "description": "切換尋找與取代模式的按鈕文字。"
+  },
+  "replacePlaceholder": {
+    "message": "取代...",
+    "description": "取代輸入方塊中的預留位置文字。"
+  },
+  "replaceButton": {
+    "message": "取代",
+    "description": "取代目前相符項目的按鈕文字。"
+  },
+  "replaceButtonTitle": {
+    "message": "取代 (Enter)",
+    "description": "取代按鈕的工具提示。"
+  },
+  "replaceAllButton": {
+    "message": "全部",
+    "description": "取代所有相符項目的按鈕文字。"
+  },
+  "replaceAllButtonTitle": {
+    "message": "全部取代",
+    "description": "全部取代按鈕的工具提示。"
   }
 }

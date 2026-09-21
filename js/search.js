@@ -5,6 +5,7 @@
 function Search(editorView) {
   this.editorView_ = editorView;
   this.query_ = "";
+  this.replaceText_ = "";
   // Index of the currently selected match, starting from 0.
   this.index_ = 0;
   this.resultsCount_ = 0;
@@ -70,6 +71,7 @@ Search.prototype.activate = function() {
  */
 Search.prototype.deactivate = function() {
   this.find("");
+  this.setReplaceText("");
   window.CodeMirror.search.closeSearchPanel(this.editorView_);
 };
 
@@ -81,7 +83,7 @@ Search.prototype.getCurrentIndex = function() {
   if (this.resultsCount_ === 0) {
     return 0;
   }
-  return this.index_ + 1;
+  return (this.index_ % this.resultsCount_) + 1;
 };
 
 /**
@@ -101,7 +103,12 @@ Search.prototype.find = function(query) {
 
   this.editorView_.dispatch({
     effects: window.CodeMirror.search.setSearchQuery.of(
-      new window.CodeMirror.search.SearchQuery({search: query, caseSensitive: false, literal: true})
+      new window.CodeMirror.search.SearchQuery({
+        search: query,
+        replace: this.replaceText_,
+        caseSensitive: false,
+        literal: true
+      })
     )
   });
 
@@ -130,7 +137,89 @@ Search.prototype.findNext = function(opt_reverse) {
     window.CodeMirror.search.findNext(this.editorView_);
   }
 
-  this.index_ %= this.resultsCount_;
+  if (this.resultsCount_ > 0) {
+    this.index_ %= this.resultsCount_;
+  }
+};
+
+/**
+ * @param {string} text Replacement text.
+ */
+Search.prototype.setReplaceText = function(text) {
+  this.replaceText_ = text;
+  if (this.query_) {
+    this.editorView_.dispatch({
+      effects: window.CodeMirror.search.setSearchQuery.of(
+        new window.CodeMirror.search.SearchQuery({
+          search: this.query_,
+          replace: this.replaceText_,
+          caseSensitive: false,
+          literal: true
+        })
+      )
+    });
+  }
+};
+
+/**
+ * @return {string}
+ */
+Search.prototype.getReplaceText = function() {
+  return this.replaceText_;
+};
+
+/**
+ * Replaces the currently matched/selected occurrence and advances to next match.
+ */
+Search.prototype.replaceNext = function() {
+  if (!this.query_ || this.resultsCount_ === 0) {
+    return;
+  }
+
+  this.editorView_.dispatch({
+    effects: window.CodeMirror.search.setSearchQuery.of(
+      new window.CodeMirror.search.SearchQuery({
+        search: this.query_,
+        replace: this.replaceText_,
+        caseSensitive: false,
+        literal: true
+      })
+    )
+  });
+
+  const docBefore = this.editorView_.state.doc;
+  window.CodeMirror.search.replaceNext(this.editorView_);
+
+  // If CodeMirror only selected the match because it wasn't previously selected,
+  // execute replaceNext again so that clicking "Replace" replaces immediately.
+  if (this.editorView_.state.doc === docBefore) {
+    window.CodeMirror.search.replaceNext(this.editorView_);
+  }
+
+  this.computeResultsCount_(this.query_);
+};
+
+/**
+ * Replaces all occurrences in the document.
+ */
+Search.prototype.replaceAll = function() {
+  if (!this.query_ || this.resultsCount_ === 0) {
+    return;
+  }
+
+  this.editorView_.dispatch({
+    effects: window.CodeMirror.search.setSearchQuery.of(
+      new window.CodeMirror.search.SearchQuery({
+        search: this.query_,
+        replace: this.replaceText_,
+        caseSensitive: false,
+        literal: true
+      })
+    )
+  });
+
+  window.CodeMirror.search.replaceAll(this.editorView_);
+  this.computeResultsCount_(this.query_);
 };
 
 /**

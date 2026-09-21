@@ -15,10 +15,20 @@ function SearchController(search) {
   $('#search-input').keydown(this.onKeydown_.bind(this));
   // Prevent search deactivation when search count is clicked
   document.getElementById('search-counting')
-      .addEventListener('mousedown', (event) => { event.preventDefault() });
+      .addEventListener('mousedown', (event) => { event.preventDefault(); });
   $('#search-next-button').click(this.onFindNext_.bind(this));
   $('#search-previous-button').click(this.onFindPrevious_.bind(this));
+  $('#search-toggle-replace').click(this.toggleReplace_.bind(this));
+
+  $('#replace-input').bind('input', this.onReplaceChange_.bind(this));
+  $('#replace-input').keydown(this.onReplaceKeydown_.bind(this));
+  $('#replace-button').click(this.onReplaceNext_.bind(this));
+  $('#replace-all-button').click(this.onReplaceAll_.bind(this));
+
   $('.search-container').focusout(this.deactivateSearch_.bind(this));
+
+  $(document).bind('opensearch', this.activateSearch_.bind(this));
+  $(document).bind('openreplace', this.activateReplace_.bind(this));
 }
 
 /** @return {number} Number of search results. */
@@ -62,6 +72,34 @@ SearchController.prototype.activateSearch_ = function() {
   this.activating_ = false;
 };
 
+/**
+ * Opens search and activates replace mode.
+ * @private
+ */
+SearchController.prototype.activateReplace_ = function() {
+  this.activateSearch_();
+  $('.search-container').addClass('replace-active');
+  if ($('#search-input').val().length > 0) {
+    document.getElementById('replace-input').focus();
+    document.getElementById('replace-input').select();
+  } else {
+    document.getElementById('search-input').focus();
+  }
+};
+
+/**
+ * Toggles replace mode on or off.
+ * @private
+ */
+SearchController.prototype.toggleReplace_ = function() {
+  if ($('.search-container').hasClass('replace-active')) {
+    $('.search-container').removeClass('replace-active');
+    document.getElementById('search-input').focus();
+  } else {
+    this.activateReplace_();
+  }
+};
+
 SearchController.prototype.deactivateSearch_ = function(e) {
   if (this.activating_) {
     return;
@@ -70,9 +108,12 @@ SearchController.prototype.deactivateSearch_ = function(e) {
   // relatedTarget is null if the element clicked on can't receive focus
   if (!e.relatedTarget || !e.relatedTarget.closest('.search-container')) {
     $('#search-input').val('');
+    $('#replace-input').val('');
     $('#search-counting').text('');
     $('header').removeClass('search-active');
+    $('.search-container').removeClass('replace-active');
     $('.search-navigation-button').removeClass('has-results');
+    this.search_.setReplaceText('');
     this.search_.deactivate();
   }
 };
@@ -93,11 +134,34 @@ SearchController.prototype.onChange_ = function() {
   }
 };
 
+SearchController.prototype.onReplaceChange_ = function() {
+  this.search_.setReplaceText($('#replace-input').val());
+};
+
 SearchController.prototype.onKeydown_ = function(e) {
   switch (e.key) {
     case 'Enter':
       e.stopPropagation();
       this.findNext_(e.shiftKey /* reverse */);
+      break;
+
+    case 'Escape':
+      e.stopPropagation();
+      this.search_.unfocus();
+      break;
+  }
+};
+
+SearchController.prototype.onReplaceKeydown_ = function(e) {
+  switch (e.key) {
+    case 'Enter':
+      e.stopPropagation();
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey || (e.altKey && e.ctrlKey)) {
+        this.onReplaceAll_();
+      } else {
+        this.onReplaceNext_();
+      }
       break;
 
     case 'Escape':
@@ -113,4 +177,20 @@ SearchController.prototype.onFindNext_ = function() {
 
 SearchController.prototype.onFindPrevious_ = function() {
   this.findNext_(true /* reverse */);
+};
+
+SearchController.prototype.onReplaceNext_ = function() {
+  this.search_.replaceNext();
+  const numResults = this.updateSearchCount_();
+  if (numResults > 0) {
+    $('.search-navigation-button').addClass('has-results');
+  } else {
+    $('.search-navigation-button').removeClass('has-results');
+  }
+};
+
+SearchController.prototype.onReplaceAll_ = function() {
+  this.search_.replaceAll();
+  this.updateSearchCount_();
+  $('.search-navigation-button').removeClass('has-results');
 };

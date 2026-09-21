@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Закрыть файл",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Переключить замену (Ctrl+H)",
+    "description": "Текст кнопки переключения режима поиска и замены."
+  },
+  "replacePlaceholder": {
+    "message": "Заменить...",
+    "description": "Текст заполнителя в поле ввода замены."
+  },
+  "replaceButton": {
+    "message": "Заменить",
+    "description": "Текст кнопки для замены текущего совпадения."
+  },
+  "replaceButtonTitle": {
+    "message": "Заменить (Enter)",
+    "description": "Подсказка для кнопки замены."
+  },
+  "replaceAllButton": {
+    "message": "Все",
+    "description": "Текст кнопки для замены всех совпадений."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Заменить все",
+    "description": "Подсказка для кнопки «Заменить все»."
   }
 }

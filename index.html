@@ -227,20 +227,46 @@
     <div id="main-container">
       <header>
         <button class="mdc-icon-button material-icons" id="toggle-sidebar" i18n-values="title:openSidebarButton;aria-label:openSidebarButton">menu</button>
-        <div class="search-container">
-          <div id="search-input-container">
-            <input type="search" id="search-input"
-                i18n-values="placeholder:searchPlaceholder">
-            <span id="search-counting"></span>
+        <div id="search-anchor">
+          <div class="search-container">
+            <div class="search-row">
+              <div id="search-input-container">
+                <input type="search" id="search-input"
+                    i18n-values="placeholder:searchPlaceholder">
+                <span id="search-counting"></span>
+              </div>
+              <button
+                  class="search-navigation-button mdc-icon-button material-icons"
+                  id="search-previous-button"
+                  i18n-values="title:searchPreviousButton;aria-label:searchPreviousButton">expand_less</button>
+              <button
+                  class="search-navigation-button mdc-icon-button material-icons"
+                  id="search-next-button"
+                  i18n-values="title:searchNextButton;aria-label:searchNextButton">expand_more</button>
+              <button
+                  class="search-toggle-button mdc-icon-button material-icons"
+                  id="search-toggle-replace"
+                  i18n-values="title:toggleReplaceButton;aria-label:toggleReplaceButton">find_replace</button>
+            </div>
+            <div class="replace-row" id="replace-row">
+              <div id="replace-input-container">
+                <input type="text" id="replace-input"
+                    i18n-values="placeholder:replacePlaceholder">
+              </div>
+              <button
+                  class="replace-action-button"
+                  id="replace-button"
+                  i18n-values="title:replaceButtonTitle"
+                  i18n-content="replaceButton">
+              </button>
+              <button
+                  class="replace-action-button"
+                  id="replace-all-button"
+                  i18n-values="title:replaceAllButtonTitle"
+                  i18n-content="replaceAllButton">
+              </button>
+            </div>
           </div>
-          <button
-              class="search-navigation-button mdc-icon-button material-icons"
-              id="search-previous-button"
-              i18n-values="title:searchPreviousButton;aria-label:searchPreviousButton">expand_less</button>
-          <button
-              class="search-navigation-button mdc-icon-button material-icons"
-              id="search-next-button"
-              i18n-values="title:searchNextButton;aria-label:searchNextButton">expand_more</button>
         </div>
         <div id="title-filename"></div>
       </header>

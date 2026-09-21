@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Stäng fil",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Växla ersätt (Ctrl+H)",
+    "description": "Knapptext för att växla sök- och ersättningsläge."
+  },
+  "replacePlaceholder": {
+    "message": "Ersätt...",
+    "description": "Platshållartext i ersättningsfältet."
+  },
+  "replaceButton": {
+    "message": "Ersätt",
+    "description": "Knapptext för att ersätta aktuell träff."
+  },
+  "replaceButtonTitle": {
+    "message": "Ersätt (Retur)",
+    "description": "Verktygstips för ersätt-knappen."
+  },
+  "replaceAllButton": {
+    "message": "Alla",
+    "description": "Knapptext för att ersätta alla träffar."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Ersätt alla",
+    "description": "Verktygstips för knappen ersätt alla."
   }
 }

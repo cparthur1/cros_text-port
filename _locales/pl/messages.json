@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Zamknij plik",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Przełącz zastępowanie (Ctrl+H)",
+    "description": "Tekst przycisku do przełączania trybu znajdź i zastąp."
+  },
+  "replacePlaceholder": {
+    "message": "Zastąp...",
+    "description": "Tekst zastępczy w polu wprowadzania zastępowania."
+  },
+  "replaceButton": {
+    "message": "Zastąp",
+    "description": "Tekst przycisku zastępowania bieżącego dopasowania."
+  },
+  "replaceButtonTitle": {
+    "message": "Zastąp (Enter)",
+    "description": "Etykietka narzędzia dla przycisku zastąp."
+  },
+  "replaceAllButton": {
+    "message": "Wszystko",
+    "description": "Tekst przycisku zastępowania wszystkich dopasowań."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Zastąp wszystko",
+    "description": "Etykietka narzędzia dla przycisku zastąp wszystko."
   }
 }

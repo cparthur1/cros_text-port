@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Bestand sluiten",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Vervangen in-/uitschakelen (Ctrl+H)",
+    "description": "Knoptekst om de modus voor zoeken en vervangen in of uit te schakelen."
+  },
+  "replacePlaceholder": {
+    "message": "Vervangen...",
+    "description": "Tijdelijke aanduiding in het invoerveld voor vervangen."
+  },
+  "replaceButton": {
+    "message": "Vervangen",
+    "description": "Knoptekst om de huidige overeenkomst te vervangen."
+  },
+  "replaceButtonTitle": {
+    "message": "Vervangen (Enter)",
+    "description": "Knopinfo voor de knop vervangen."
+  },
+  "replaceAllButton": {
+    "message": "Alles",
+    "description": "Knoptekst om alle overeenkomsten te vervangen."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Alles vervangen",
+    "description": "Knopinfo voor de knop alles vervangen."
   }
 }

@@ -174,5 +174,29 @@
   "closeFileButton": {
     "message": "关闭文件",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "切换替换 (Ctrl+H)",
+    "description": "切换查找和替换模式的按钮文本。"
+  },
+  "replacePlaceholder": {
+    "message": "替换...",
+    "description": "替换输入框中的占位符文本。"
+  },
+  "replaceButton": {
+    "message": "替换",
+    "description": "替换当前匹配项的按钮文本。"
+  },
+  "replaceButtonTitle": {
+    "message": "替换 (Enter)",
+    "description": "替换按钮的提示文本。"
+  },
+  "replaceAllButton": {
+    "message": "全部",
+    "description": "替换所有匹配项的按钮文本。"
+  },
+  "replaceAllButtonTitle": {
+    "message": "全部替换",
+    "description": "全部替换按钮的提示文本。"
   }
 }

@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Luk fil",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Slå erstat til/fra (Ctrl+H)",
+    "description": "Knaptekst til at slå søg og erstat til/fra."
+  },
+  "replacePlaceholder": {
+    "message": "Erstat...",
+    "description": "Pladsholdertekst i erstatningsfeltet."
+  },
+  "replaceButton": {
+    "message": "Erstat",
+    "description": "Knaptekst til at erstatte det aktuelle match."
+  },
+  "replaceButtonTitle": {
+    "message": "Erstat (Enter)",
+    "description": "Værktøjstip til erstat-knappen."
+  },
+  "replaceAllButton": {
+    "message": "Alle",
+    "description": "Knaptekst til at erstatte alle matcher."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Erstat alle",
+    "description": "Værktøjstip til knappen erstat alle."
   }
 }

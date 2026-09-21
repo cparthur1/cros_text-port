@@ -12,6 +12,7 @@ While the original project is archived and was designed specifically for Chrome 
 *   **Offline Support**: Fully functional without an internet connection using Service Workers.
 *   **Modern File System Access**: Uses the **File System Access API** to open and save local files directly from your browser.
 *   **Auto Save**: Automatically saves open files in the background as you edit with debounce and tab/window synchronization.
+*   **Find and Replace**: Built-in search and replace powered by CodeMirror 6 with match counts, navigation, inline replace, and replace-all (`Ctrl+F` / `Ctrl+H`).
 *   **Storage**: Persists your settings and theme preferences using local storage polyfills.
 *   **i18n Support**: Dynamic localization with fallback for local `file://` usage.
 

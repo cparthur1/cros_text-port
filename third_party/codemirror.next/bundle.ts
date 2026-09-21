@@ -10,6 +10,8 @@ import {
   indentSelection,
   insertNewlineAndIndent,
   insertTab,
+  redo,
+  undo,
 } from '@codemirror/commands';
 import {
   angular,
@@ -85,6 +87,8 @@ import {
   findNext,
   findPrevious,
   openSearchPanel,
+  replaceAll,
+  replaceNext,
   search,
   SearchCursor,
   SearchQuery,
@@ -112,6 +116,8 @@ const CodeMirrorNext = {
     indentSelection,
     insertNewlineAndIndent,
     insertTab,
+    redo,
+    undo,
   },
   highlight: {
     tags,
@@ -158,6 +164,8 @@ const CodeMirrorNext = {
     findNext,
     findPrevious,
     openSearchPanel,
+    replaceAll,
+    replaceNext,
     search,
     SearchCursor,
     SearchQuery,

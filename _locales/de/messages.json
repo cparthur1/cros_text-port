@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Datei schließen",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Ersetzen umschalten (Strg+H)",
+    "description": "Der Text der Schaltfläche zum Umschalten des Suchen- und Ersetzen-Modus."
+  },
+  "replacePlaceholder": {
+    "message": "Ersetzen...",
+    "description": "Der Platzhaltertext im Ersetzen-Eingabefeld."
+  },
+  "replaceButton": {
+    "message": "Ersetzen",
+    "description": "Der Text der Schaltfläche zum Ersetzen des aktuellen Treffers."
+  },
+  "replaceButtonTitle": {
+    "message": "Ersetzen (Eingabetaste)",
+    "description": "Tooltip für die Ersetzen-Schaltfläche."
+  },
+  "replaceAllButton": {
+    "message": "Alle",
+    "description": "Der Text der Schaltfläche zum Ersetzen aller Treffer."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Alle ersetzen",
+    "description": "Tooltip für die Schaltfläche 'Alle ersetzen'."
   }
 }

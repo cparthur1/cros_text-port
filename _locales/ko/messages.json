@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "파일 닫기",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "바꾸기 전환 (Ctrl+H)",
+    "description": "찾기 및 바꾸기 모드를 전환하는 버튼의 텍스트입니다."
+  },
+  "replacePlaceholder": {
+    "message": "바꾸기...",
+    "description": "바꾸기 입력란의 자리표시자 텍스트입니다."
+  },
+  "replaceButton": {
+    "message": "바꾸기",
+    "description": "현재 일치 항목을 바꾸는 버튼의 텍스트입니다."
+  },
+  "replaceButtonTitle": {
+    "message": "바꾸기 (Enter)",
+    "description": "바꾸기 버튼의 도움말 풍선입니다."
+  },
+  "replaceAllButton": {
+    "message": "모두",
+    "description": "모든 일치 항목을 바꾸는 버튼의 텍스트입니다."
+  },
+  "replaceAllButtonTitle": {
+    "message": "모두 바꾸기",
+    "description": "모두 바꾸기 버튼의 도움말 풍선입니다."
   }
 }

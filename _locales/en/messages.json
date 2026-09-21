@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Close file",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Toggle replace (Ctrl+H)",
+    "description": "The button text to toggle find and replace mode."
+  },
+  "replacePlaceholder": {
+    "message": "Replace...",
+    "description": "The placeholder text in the replace input."
+  },
+  "replaceButton": {
+    "message": "Replace",
+    "description": "The button text to replace the current match."
+  },
+  "replaceButtonTitle": {
+    "message": "Replace (Enter)",
+    "description": "Tooltip for the replace button."
+  },
+  "replaceAllButton": {
+    "message": "All",
+    "description": "The button text to replace all matches."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Replace all",
+    "description": "Tooltip for the replace all button."
   }
 }

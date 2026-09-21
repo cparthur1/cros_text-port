@@ -178,5 +178,29 @@
   "closeFileButton": {
     "message": "Chiudi file",
     "description": "The button text to close a file."
+  },
+  "toggleReplaceButton": {
+    "message": "Attiva/disattiva sostituisci (Ctrl+H)",
+    "description": "Il testo del pulsante per attivare/disattivare la modalità trova e sostituisci."
+  },
+  "replacePlaceholder": {
+    "message": "Sostituisci...",
+    "description": "Il testo segnaposto nel campo di sostituzione."
+  },
+  "replaceButton": {
+    "message": "Sostituisci",
+    "description": "Il testo del pulsante per sostituire la corrispondenza corrente."
+  },
+  "replaceButtonTitle": {
+    "message": "Sostituisci (Invio)",
+    "description": "Descrizione comando per il pulsante sostituisci."
+  },
+  "replaceAllButton": {
+    "message": "Tutto",
+    "description": "Il testo del pulsante per sostituire tutte le corrispondenze."
+  },
+  "replaceAllButtonTitle": {
+    "message": "Sostituisci tutto",
+    "description": "Descrizione comando per il pulsante sostituisci tutto."
   }
 }

@@ -44,7 +44,12 @@ HotkeysController.prototype.onKeydown_ = function(e) {
 
       case 'f':
       case 'F':
-        document.getElementById('search-input').focus();
+        $.event.trigger('opensearch');
+        return false;
+
+      case 'h':
+      case 'H':
+        $.event.trigger('openreplace');
         return false;
 
       case 'n':
