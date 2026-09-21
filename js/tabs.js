@@ -5,7 +5,7 @@
  * @param {string} lineEndings What character(s) to use as the line ending.
  * @param {FileEntry} entry
  */
-function Tab(id, session, lineEndings, entry, dialogController) {
+function Tab(id, session, lineEndings, entry, dialogController, opt_isMissing, opt_cachedName, opt_cachedPath) {
   this.id_ = id;
   /** @type {window.CodeMirror.state.EditorState} */
   this.session_ = session;
@@ -14,14 +14,21 @@ function Tab(id, session, lineEndings, entry, dialogController) {
   /** @type {FileEntry} */
   this.entry_ = entry;
   this.saved_ = true;
-  this.path_ = null;
+  this.path_ = opt_cachedPath || null;
+  this.name_ = opt_cachedName || null;
+  this.isMissing_ = !!opt_isMissing;
   this.dialogController_ = dialogController;
   this.autoSaveTimeout_ = null;
   this.isSaving_ = false;
   this.savePending_ = false;
   this.pendingSaveCallbacks_ = [];
-  if (this.entry_)
+  this.handleId_ = (entry && entry.handleId) || null;
+  if (this.entry_) {
     this.updatePath_();
+    if (this.entry_.isMissing) {
+      this.isMissing_ = true;
+    }
+  }
 };
 
 Tab.prototype.getId = function() {
@@ -29,11 +36,25 @@ Tab.prototype.getId = function() {
 };
 
 Tab.prototype.getName = function() {
-  if (this.entry_) {
+  if (this.entry_ && this.entry_.name) {
     return this.entry_.name;
+  } else if (this.name_) {
+    return this.name_;
   } else {
     // TODO: i18n 'Untitled' text
     return 'Untitled ' + this.id_;
+  }
+};
+
+Tab.prototype.isMissing = function() {
+  return !!this.isMissing_;
+};
+
+Tab.prototype.setMissing = function(isMissing) {
+  if (this.isMissing_ !== isMissing) {
+    this.isMissing_ = isMissing;
+    $.event.trigger('tabmissingchange', this);
+    $.event.trigger('tabrenamed', this);
   }
 };
 
@@ -41,10 +62,11 @@ Tab.prototype.getName = function() {
  * @return {string?} Filename extension or null.
  */
 Tab.prototype.getExtension = function() {
-  if (!this.entry_)
+  var name = this.getName();
+  if (!name || name.indexOf('Untitled ') === 0)
     return null;
 
-  return util.getExtension(this.getName());
+  return util.getExtension(name);
 };
 
 Tab.prototype.getSession = function() {
@@ -59,8 +81,14 @@ Tab.prototype.setSession = function(session) {
  * @param {FileEntry} entry
  */
 Tab.prototype.setEntry = function(entry) {
-  var nameChanged = this.getName() != entry.name;
+  var nameChanged = this.getName() != (entry ? entry.name : '');
   this.entry_ = entry;
+  if (entry) {
+    this.handleId_ = entry.handleId || this.handleId_;
+    if (!entry.isMissing) {
+      this.setMissing(false);
+    }
+  }
   if (nameChanged)
     $.event.trigger('tabrenamed', this);
   this.updatePath_();
@@ -75,6 +103,7 @@ Tab.prototype.getPath = function() {
 };
 
 Tab.prototype.updatePath_ = function() {
+  if (!this.entry_) return;
   chrome.fileSystem.getDisplayPath(this.entry_, function(path) {
     this.path_ = path;
     $.event.trigger('tabpathchange', this);
@@ -182,15 +211,19 @@ function Tabs(editor, dialogController, settings) {
   /** @type {Tab|null} Current selected tab, or initially null. */
   this.currentTab_ = null;
 
+  this.sessionSaveTimeout_ = null;
+
   $(document).bind('docchange', this.onDocChanged_.bind(this));
   $(document).bind('settingschange', this.onSettingsChanged_.bind(this));
   $(window).bind('blur', this.onWindowBlur_.bind(this));
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
+      this.saveSession_();
       this.onWindowBlur_();
     }
   }.bind(this));
   window.addEventListener('beforeunload', function(e) {
+    this.saveSession_();
     if (this.settings_.get('autosave')) {
       this.onWindowBlur_();
     }
@@ -273,7 +306,7 @@ Tabs.prototype.newWindow = function() {
  *
  * @param {?string} opt_content What text content the tab should contain. Otherwise it starts empty.
  */
-Tabs.prototype.newTab = function(opt_content, opt_entry) {
+Tabs.prototype.newTab = function(opt_content, opt_entry, opt_isMissing, opt_cachedName, opt_cachedPath) {
   var id = 1;
   while (this.getTabById(id)) {
     id++;
@@ -283,10 +316,12 @@ Tabs.prototype.newTab = function(opt_content, opt_entry) {
   var lineEndings = util.guessLineEndings(opt_content);
 
   var tab = new Tab(id, session, lineEndings, opt_entry || null,
-                    this.dialogController_);
+                    this.dialogController_, opt_isMissing, opt_cachedName, opt_cachedPath);
   this.tabs_.push(tab);
   $.event.trigger('newtab', tab);
   this.showTab(tab.getId());
+  this.saveSession_();
+  return tab;
 };
 
 /**
@@ -299,6 +334,7 @@ Tabs.prototype.reorder = function (oldIndex, newIndex) {
       newIndex, // specifies at what position to add items
       0, // no items will be removed
       this.tabs_.splice(oldIndex, 1)[0]); // item to be added
+  this.saveSession_();
 };
 
 Tabs.prototype.getTabIndex = function(tab) {
@@ -329,7 +365,7 @@ Tabs.prototype.showTab = function(tabId) {
   if (this.currentTab_) {
     // Before switching tabs, write the editorView's state to the tab.
     this.updateCurrentTabState_();
-    if (this.settings_.get('autosave') && !this.currentTab_.isSaved() && this.currentTab_.getEntry()) {
+    if (this.settings_.get('autosave') && !this.currentTab_.isSaved() && this.currentTab_.getEntry() && !this.currentTab_.isMissing()) {
       if (this.currentTab_.autoSaveTimeout_) {
         clearTimeout(this.currentTab_.autoSaveTimeout_);
         this.currentTab_.autoSaveTimeout_ = null;
@@ -338,7 +374,7 @@ Tabs.prototype.showTab = function(tabId) {
     }
   }
 
-  var tab = this.getTabById(tabId)
+  var tab = this.getTabById(tabId);
   if (!tab) {
     console.error('Can\'t find tab', tabId);
     return;
@@ -347,7 +383,9 @@ Tabs.prototype.showTab = function(tabId) {
   this.editor_.setSession(tab.getSession(), tab.getExtension());
   $.event.trigger('switchtab', tab);
   this.editor_.focus();
+  this.saveSession_();
 };
+
 
 Tabs.prototype.close = function(tabId) {
   for (var i = 0; i < this.tabs_.length; i++) {
@@ -363,7 +401,7 @@ Tabs.prototype.close = function(tabId) {
   var tab = this.tabs_[i];
 
   if (!tab.isSaved()) {
-    if (this.settings_.get('autosave') && tab.getEntry()) {
+    if (this.settings_.get('autosave') && tab.getEntry() && !tab.isMissing()) {
       if (tab.autoSaveTimeout_) {
         clearTimeout(tab.autoSaveTimeout_);
         tab.autoSaveTimeout_ = null;
@@ -404,6 +442,7 @@ Tabs.prototype.closeTab_ = function(tab) {
 
   this.tabs_.splice(i, 1);
   $.event.trigger('tabclosed', tab);
+  this.saveSession_();
 };
 
 /**
@@ -504,7 +543,7 @@ Tabs.prototype.save = function(opt_tab, opt_callback, opt_isAutosave) {
     this.updateCurrentTabState_();
   }
 
-  if (tab.getEntry()) {
+  if (tab.getEntry() && !tab.isMissing()) {
     tab.save(opt_callback, opt_isAutosave);
   } else if (!opt_isAutosave) {
     this.saveAs(tab, opt_callback);
@@ -522,7 +561,7 @@ Tabs.prototype.saveAs = function(opt_tab, opt_callback) {
     this.updateCurrentTabState_();
   }
 
-  var suggestedName = tab.getEntry() && tab.getEntry().name ||
+  var suggestedName = (!tab.isMissing() && tab.getEntry() && tab.getEntry().name) ||
                       util.sanitizeFileName(tab.session_.doc.line(1).text) ||
                       tab.getName();
 
@@ -546,7 +585,7 @@ Tabs.prototype.getFilesToRetain = function() {
   var toRetain = [];
 
   for (i = 0; i < this.tabs_.length; i++) {
-    if (this.tabs_[i].getEntry()) {
+    if (this.tabs_[i].getEntry() && !this.tabs_[i].isMissing()) {
       toRetain.push(this.tabs_[i].getEntry());
     }
   }
@@ -586,18 +625,24 @@ Tabs.prototype.modeAutoSet = function(tab) {
 Tabs.prototype.readFileToNewTab_ = function(entry, file) {
   $.event.trigger('loadingfile');
   var self = this;
+  if (!file) {
+    self.newTab('', entry, true, entry ? entry.name : 'Unknown');
+    return;
+  }
   var reader = new FileReader();
   reader.onerror = util.handleFSError;
   reader.onloadend = function(e) {
     self.newTab(this.result, entry);
     if (self.tabs_.length === 2 &&
         !self.tabs_[0].getEntry() &&
-        self.tabs_[0].isSaved()) {
+        self.tabs_[0].isSaved() &&
+        self.tabs_[0].getName().indexOf('Untitled ') === 0 &&
+        self.tabs_[0].getContent_() === '') {
       self.close(self.tabs_[0].getId());
     }
   };
   reader.readAsText(file);
-}
+};
 
 /**
  * @param {!Tab} tab
@@ -611,6 +656,7 @@ Tabs.prototype.saveEntry_ = function(tab, entry, opt_callback) {
 
   tab.setEntry(entry);
   this.save(tab, opt_callback);
+  this.saveSession_();
 };
 
 /**
@@ -623,7 +669,7 @@ Tabs.prototype.onSettingsChanged_ = function(e, key, value) {
         this.updateCurrentTabState_();
       }
       for (var i = 0; i < this.tabs_.length; i++) {
-        if (!this.tabs_[i].isSaved() && this.tabs_[i].getEntry()) {
+        if (!this.tabs_[i].isSaved() && this.tabs_[i].getEntry() && !this.tabs_[i].isMissing()) {
           this.save(this.tabs_[i], null, true);
         }
       }
@@ -648,7 +694,7 @@ Tabs.prototype.onWindowBlur_ = function() {
     }
     for (var i = 0; i < this.tabs_.length; i++) {
       var tab = this.tabs_[i];
-      if (!tab.isSaved() && tab.getEntry()) {
+      if (!tab.isSaved() && tab.getEntry() && !tab.isMissing()) {
         if (tab.autoSaveTimeout_) {
           clearTimeout(tab.autoSaveTimeout_);
           tab.autoSaveTimeout_ = null;
@@ -664,7 +710,7 @@ Tabs.prototype.onWindowBlur_ = function() {
  * @param {Tab} tab
  */
 Tabs.prototype.scheduleAutoSave_ = function(tab) {
-  if (!tab || !tab.getEntry()) return;
+  if (!tab || !tab.getEntry() || tab.isMissing()) return;
 
   if (tab.autoSaveTimeout_) {
     clearTimeout(tab.autoSaveTimeout_);
@@ -672,7 +718,7 @@ Tabs.prototype.scheduleAutoSave_ = function(tab) {
 
   tab.autoSaveTimeout_ = setTimeout(function() {
     tab.autoSaveTimeout_ = null;
-    if (!tab.isSaved() && tab.getEntry()) {
+    if (!tab.isSaved() && tab.getEntry() && !tab.isMissing()) {
       this.save(tab, null, true);
     }
   }.bind(this), 1000);
@@ -688,6 +734,7 @@ Tabs.prototype.onDocChanged_ = function() {
     if (this.settings_.get('autosave')) {
       this.scheduleAutoSave_(this.currentTab_);
     }
+    this.scheduleSaveSession_();
   }
 };
 
@@ -709,4 +756,163 @@ Tabs.prototype.hasUnsavedTabs = function() {
     }
   }
   return false;
+};
+
+Tabs.prototype.scheduleSaveSession_ = function() {
+  if (this.sessionSaveTimeout_) {
+    clearTimeout(this.sessionSaveTimeout_);
+  }
+  this.sessionSaveTimeout_ = setTimeout(function() {
+    this.sessionSaveTimeout_ = null;
+    this.saveSession_();
+  }.bind(this), 500);
+};
+
+/**
+ * Save open tabs state to localStorage.
+ */
+Tabs.prototype.saveSession_ = function() {
+  if (!this.tabs_) return;
+  if (this.currentTab_) {
+    this.updateCurrentTabState_();
+  }
+  var tabsData = [];
+  for (var i = 0; i < this.tabs_.length; i++) {
+    var tab = this.tabs_[i];
+    var entry = tab.getEntry();
+    var handleId = (entry && entry.handleId) || tab.handleId_ || null;
+    if (entry && entry.handleId && entry.handle && window.chrome && window.chrome.fileSystem && window.chrome.fileSystem.storeHandle) {
+      window.chrome.fileSystem.storeHandle(entry.handleId, entry.handle);
+    }
+    var content = '';
+    try {
+      content = tab.getContent_();
+    } catch (e) {
+      content = '';
+    }
+
+    tabsData.push({
+      id: tab.getId(),
+      name: tab.getName(),
+      path: tab.getPath(),
+      hasEntry: !!entry || (tab.isMissing() && tab.getName().indexOf('Untitled ') !== 0),
+      handleId: handleId,
+      content: (content && content.length < 2000000) ? content : '',
+      saved: tab.isSaved(),
+      isMissing: tab.isMissing(),
+      lineEndings: tab.lineEndings_ || '\n'
+    });
+  }
+
+  var session = {
+    activeTabId: this.currentTab_ ? this.currentTab_.getId() : null,
+    tabs: tabsData,
+    timestamp: Date.now()
+  };
+
+  try {
+    localStorage.setItem('textapp_session_tabs', JSON.stringify(session));
+  } catch (e) {
+    console.warn('Could not save tabs session to localStorage:', e);
+  }
+};
+
+/**
+ * Restore open tabs from previous session stored in localStorage.
+ * @return {Promise<boolean>} True if any tabs were restored.
+ */
+Tabs.prototype.restoreSession_ = async function() {
+  if (this.restoringSession_) {
+    return false;
+  }
+  this.restoringSession_ = true;
+  try {
+    var sessionStr = null;
+    try {
+      sessionStr = localStorage.getItem('textapp_session_tabs');
+    } catch (e) {
+      console.warn('Error reading textapp_session_tabs from localStorage:', e);
+    }
+
+    if (!sessionStr) {
+      return false;
+    }
+
+    var session;
+    try {
+      session = JSON.parse(sessionStr);
+    } catch (e) {
+      console.warn('Failed to parse textapp_session_tabs:', e);
+      return false;
+    }
+
+    if (!session || !Array.isArray(session.tabs) || session.tabs.length === 0) {
+      return false;
+    }
+
+    var activeId = session.activeTabId;
+
+    for (var i = 0; i < session.tabs.length; i++) {
+      var tabData = session.tabs[i];
+      var entry = null;
+      var isMissing = !!tabData.isMissing;
+      var content = tabData.content || '';
+
+      if (tabData.hasEntry) {
+        if (tabData.handleId && window.chrome && window.chrome.fileSystem && window.chrome.fileSystem.getStoredHandle) {
+          try {
+            var handle = await window.chrome.fileSystem.getStoredHandle(tabData.handleId);
+            if (handle) {
+              try {
+                var file = await handle.getFile();
+                entry = new window.FileEntryPolyfill(handle, tabData.handleId);
+                isMissing = false;
+                try {
+                  content = await file.text();
+                } catch (readErr) {
+                  console.warn('Could not read file text from handle:', readErr);
+                }
+              } catch (fileErr) {
+                console.warn('File handle getFile failed - file is missing in location:', tabData.path, fileErr);
+                isMissing = true;
+              }
+            } else {
+              console.warn('Handle not found in IndexedDB - file is missing in location:', tabData.path);
+              isMissing = true;
+            }
+          } catch (dbErr) {
+            console.warn('Error querying file handle in IndexedDB:', dbErr);
+            isMissing = true;
+          }
+        } else {
+          isMissing = true;
+        }
+      }
+
+      var id = tabData.id || 1;
+      while (this.getTabById(id)) {
+        id++;
+      }
+      var sessionState = this.editor_.newState(content);
+      var lineEndings = tabData.lineEndings || util.guessLineEndings(content);
+      var tab = new Tab(id, sessionState, lineEndings, entry, this.dialogController_, isMissing, tabData.name, tabData.path);
+      tab.handleId_ = tabData.handleId;
+      if (tabData.saved === false) {
+        tab.changed();
+      }
+      this.tabs_.push(tab);
+      $.event.trigger('newtab', tab);
+    }
+
+    if (activeId && this.getTabById(activeId)) {
+      this.showTab(activeId);
+    } else if (this.tabs_.length > 0) {
+      this.showTab(this.tabs_[0].getId());
+    }
+
+    this.saveSession_();
+    return true;
+  } finally {
+    this.restoringSession_ = false;
+  }
 };

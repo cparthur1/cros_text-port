@@ -250,15 +250,87 @@
   // --- chrome.fileSystem ---
   if (!chrome.fileSystem) chrome.fileSystem = {};
 
-  function FileEntryPolyfill(handle) {
-    this.handle = handle;
-    this.name = handle.name;
-    this.isFile = handle.kind === 'file';
-    this.isDirectory = handle.kind === 'directory';
+  // --- IndexedDB Handle Store ---
+  var dbPromise = null;
+  function getDB() {
+    if (!dbPromise) {
+      dbPromise = new Promise(function(resolve) {
+        if (!window.indexedDB) {
+          resolve(null);
+          return;
+        }
+        var req = indexedDB.open('TextAppHandlesDB', 1);
+        req.onupgradeneeded = function(e) {
+          var db = e.target.result;
+          if (!db.objectStoreNames.contains('file_handles')) {
+            db.createObjectStore('file_handles', { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = function() { resolve(req.result); };
+        req.onerror = function() { resolve(null); };
+      });
+    }
+    return dbPromise;
   }
 
+  function storeHandle(id, handle) {
+    return getDB().then(function(db) {
+      if (!db || !handle) return;
+      return new Promise(function(resolve) {
+        try {
+          var tx = db.transaction('file_handles', 'readwrite');
+          tx.objectStore('file_handles').put({ id: id, handle: handle, name: handle.name });
+          tx.oncomplete = function() { resolve(); };
+          tx.onerror = function() { resolve(); };
+        } catch(e) {
+          resolve();
+        }
+      });
+    });
+  }
+
+  function retrieveHandle(id) {
+    return getDB().then(function(db) {
+      if (!db || !id) return null;
+      return new Promise(function(resolve) {
+        try {
+          var tx = db.transaction('file_handles', 'readonly');
+          var req = tx.objectStore('file_handles').get(id);
+          req.onsuccess = function() {
+            resolve(req.result ? req.result.handle : null);
+          };
+          req.onerror = function() { resolve(null); };
+        } catch(e) {
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  chrome.fileSystem.storeHandle = storeHandle;
+  chrome.fileSystem.getStoredHandle = retrieveHandle;
+
+  function FileEntryPolyfill(handle, opt_id) {
+    this.handle = handle;
+    this.name = handle ? handle.name : '';
+    this.isFile = handle ? handle.kind === 'file' : true;
+    this.isDirectory = handle ? handle.kind === 'directory' : false;
+    this.handleId = opt_id || ('handle_' + (handle ? handle.name.replace(/[^a-zA-Z0-9_-]/g, '_') : 'file') + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+    if (this.handle) {
+      storeHandle(this.handleId, this.handle);
+    }
+  }
+  window.FileEntryPolyfill = FileEntryPolyfill;
+
   FileEntryPolyfill.prototype.file = function(callback) {
-    this.handle.getFile().then(callback);
+    if (!this.handle) {
+      callback(null);
+      return;
+    }
+    this.handle.getFile().then(callback).catch(function(err) {
+      console.warn('Could not read file from handle:', err);
+      callback(null);
+    });
   };
 
   FileEntryPolyfill.prototype.createWriter = function(callback) {
@@ -271,6 +343,10 @@
         if (this.onwrite) this.onwrite();
       },
       write: function(blob) {
+        if (!self.handle) {
+          if (writer.onerror) writer.onerror(new Error('No file handle'));
+          return;
+        }
         self.handle.createWritable().then(function(writable) {
           writable.write(blob).then(function() {
             writable.close().then(function() {
@@ -335,10 +411,30 @@
   };
 
   chrome.fileSystem.retainEntry = function(entry) {
-    return 'mock-id-' + entry.name;
+    if (entry && entry.handleId && entry.handle) {
+      storeHandle(entry.handleId, entry.handle);
+      return entry.handleId;
+    }
+    return 'mock-id-' + (entry ? entry.name : 'file');
   };
   chrome.fileSystem.restoreEntry = function(id, callback) {
-    callback(null);
+    retrieveHandle(id).then(function(handle) {
+      if (!handle) {
+        callback(null);
+        return;
+      }
+      handle.getFile().then(function(file) {
+        var entry = new FileEntryPolyfill(handle, id);
+        callback(entry);
+      }).catch(function(err) {
+        console.warn('File handle found in IndexedDB but getFile failed (missing file):', err);
+        var entry = new FileEntryPolyfill(handle, id);
+        entry.isMissing = true;
+        callback(entry);
+      });
+    }).catch(function(err) {
+      callback(null);
+    });
   };
 
   // --- File Handling API ---

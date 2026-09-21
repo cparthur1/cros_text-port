@@ -15,6 +15,7 @@ function MenuController(tabs) {
   $(document).bind('tabclosed', this.onTabClosed.bind(this));
   $(document).bind('tabpathchange', this.onTabPathChange.bind(this));
   $(document).bind('tabrenamed', this.onTabRenamed.bind(this));
+  $(document).bind('tabmissingchange', this.onTabMissingChange.bind(this));
   $(document).bind('tabsave', this.onTabSave.bind(this));
 }
 
@@ -30,8 +31,27 @@ MenuController.prototype.addNewTab_ = function(e, tab) {
   tabElement.setAttribute('draggable', 'true');
   const filenameElement = document.createElement('button');
   filenameElement.id = 'tab' + id;
-  filenameElement.textContent = tab.getName();
   filenameElement.className = 'filename sidebar-button';
+  if (tab.isMissing()) {
+    filenameElement.classList.add('missing-file');
+    filenameElement.setAttribute('title', tab.getPath() ? (tab.getPath() + ' (File missing)') : 'File missing');
+  }
+
+  const missingIcon = document.createElement('img');
+  missingIcon.className = 'missing-file-icon';
+  missingIcon.src = 'assets/missing_file.svg';
+  missingIcon.alt = 'Missing file';
+  missingIcon.title = 'File is missing in the previously opened location';
+  if (!tab.isMissing()) {
+    missingIcon.style.display = 'none';
+  }
+  filenameElement.appendChild(missingIcon);
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'tab-text';
+  textSpan.textContent = tab.getName();
+  filenameElement.appendChild(textSpan);
+
   tabElement.appendChild(filenameElement);
   const closeElement = document.createElement('button');
   closeElement.textContent = 'close';
@@ -85,12 +105,35 @@ MenuController.prototype.onDragOver_ = function(overItem, e) {
 };
 
 MenuController.prototype.onTabRenamed = function(e, tab) {
-  $('#tab' + tab.getId() + '.filename').text(tab.getName());
+  const tabBtn = $('#tab' + tab.getId() + '.filename');
+  const textSpan = tabBtn.find('.tab-text');
+  if (textSpan.length) {
+    textSpan.text(tab.getName());
+  } else {
+    tabBtn.text(tab.getName());
+  }
   this.tabs_.modeAutoSet(tab);
 };
 
+MenuController.prototype.onTabMissingChange = function(e, tab) {
+  const tabBtn = $('#tab' + tab.getId() + '.filename');
+  const missingIcon = tabBtn.find('.missing-file-icon');
+  if (tab.isMissing()) {
+    tabBtn.addClass('missing-file');
+    missingIcon.show();
+    tabBtn.attr('title', tab.getPath() ? (tab.getPath() + ' (File missing)') : 'File missing');
+  } else {
+    tabBtn.removeClass('missing-file');
+    missingIcon.hide();
+    tabBtn.attr('title', tab.getPath() || '');
+  }
+};
+
 MenuController.prototype.onTabPathChange = function(e, tab) {
-  $('#tab' + tab.getId() + '.filename').attr('title', tab.getPath());
+  const title = tab.isMissing() ?
+      (tab.getPath() ? tab.getPath() + ' (File missing)' : 'File missing') :
+      (tab.getPath() || '');
+  $('#tab' + tab.getId() + '.filename').attr('title', title);
 };
 
 MenuController.prototype.onTabChange = function(e, tab) {

@@ -273,14 +273,44 @@ img {
 }
 
 #tabs-list .filename {
-  display: inline;
+  align-items: center;
+  display: flex;
   flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-#tabs-list .filename.unsaved:after {
+#tabs-list .filename .tab-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#tabs-list .filename.unsaved .tab-text:after,
+#tabs-list .filename.unsaved:not(:has(.tab-text)):after {
   content: " *";
+}
+
+#tabs-list .filename .missing-file-icon {
+  flex-shrink: 0;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
+  width: 18px;
+}
+
+body[theme="dark"] #tabs-list .filename .missing-file-icon {
+  filter: invert(1) brightness(0.9);
+}
+
+#tabs-list .filename.missing-file {
+  opacity: 0.85;
+}
+
+#tabs-list .filename.missing-file .tab-text {
+  font-style: italic;
 }
 
 #tabs-list li > .close {

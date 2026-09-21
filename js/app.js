@@ -39,10 +39,17 @@ TextApp.prototype.init = function() {
  * successfully opened.
  * @param {!Array.<FileEntry>} entries The file entries to be opened.
  */
-TextApp.prototype.openTabs = function(entries) {
-  for (var i = 0; i < entries.length; i++) {
-    this.tabs_.openFileEntry(entries[i]);
+TextApp.prototype.openTabs = async function(entries) {
+  if (!this.tabs_.hasOpenTab()) {
+    await this.tabs_.restoreSession_();
   }
+
+  if (entries && entries.length > 0) {
+    for (var i = 0; i < entries.length; i++) {
+      this.tabs_.openFileEntry(entries[i]);
+    }
+  }
+
   this.windowController_.focus_();
   if (!this.tabs_.hasOpenTab()) {
     this.tabs_.newTab();
@@ -160,6 +167,7 @@ TextApp.prototype.onSettingsChanged_ = function(e, key, value) {
 };
 
 const textApp = new TextApp();
+window.textApp = textApp;
 
 document.addEventListener('DOMContentLoaded', function() {
   textApp.init();

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'text-app-v3';
+const CACHE_NAME = 'text-app-v4';
 const ASSETS = [
   './',
   './index.html',
   './css/app.css',
   './css/print.css',
+  './assets/missing_file.svg',
   './js/app.js',
   './js/editor-cm.js',
   './js/i18n-template.js',
