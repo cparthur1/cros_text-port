@@ -268,7 +268,12 @@
             </div>
           </div>
         </div>
-        <div id="title-filename"></div>
+        <div id="title-filename">
+          <button id="autosave-indicator" class="autosave-indicator" title="All changes saved" aria-label="Autosave status" style="display: none;">
+            <img id="autosave-indicator-icon" class="autosave-indicator-icon" src="assets/autosaved.svg" alt="Autosave status">
+          </button>
+          <span id="title-filename-text"></span>
+        </div>
       </header>
 
       <div id="editor" role="main" aria-labelledby="title-filename"></div>

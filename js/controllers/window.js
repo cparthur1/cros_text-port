@@ -30,7 +30,12 @@ function WindowController(editor, settings, tabs) {
   $(document).bind('tabpathchange', this.onTabPathChange.bind(this));
   $(document).bind('tabrenamed', this.onChangeTab_.bind(this));
   $(document).bind('tabsave', this.onTabChange_.bind(this));
+  $(document).bind('tabsaving', this.updateAutosaveIndicator_.bind(this));
+  $(document).bind('tabsaveerror', this.updateAutosaveIndicator_.bind(this));
+  $(document).bind('tabmissingchange', this.onTabMissingChange_.bind(this));
+  $(document).bind('settingschange', this.onSettingsChange_.bind(this));
 
+  this.ensureAutosaveIndicatorDom_();
   this.initUI_();
 }
 
@@ -150,28 +155,151 @@ WindowController.prototype.toggleSidebar_ = function() {
   }
 };
 
+WindowController.prototype.ensureAutosaveIndicatorDom_ = function() {
+  var container = document.getElementById('title-filename');
+  if (!container) return;
+
+  var indicator = document.getElementById('autosave-indicator');
+  var textSpan = document.getElementById('title-filename-text');
+
+  if (!indicator) {
+    indicator = document.createElement('button');
+    indicator.id = 'autosave-indicator';
+    indicator.className = 'autosave-indicator';
+    indicator.style.display = 'none';
+    indicator.setAttribute('aria-label', 'Autosave status');
+
+    var icon = document.createElement('img');
+    icon.id = 'autosave-indicator-icon';
+    icon.className = 'autosave-indicator-icon';
+    icon.src = 'assets/autosaved.svg';
+    icon.alt = 'Autosave status';
+    indicator.appendChild(icon);
+
+    if (container.firstChild) {
+      container.insertBefore(indicator, container.firstChild);
+    } else {
+      container.appendChild(indicator);
+    }
+  }
+
+  if (!textSpan) {
+    textSpan = document.createElement('span');
+    textSpan.id = 'title-filename-text';
+    container.appendChild(textSpan);
+  }
+
+  indicator.onclick = this.onAutosaveIndicatorClick_.bind(this);
+};
+
+WindowController.prototype.setTitleText_ = function(text) {
+  this.ensureAutosaveIndicatorDom_();
+  var textSpan = document.getElementById('title-filename-text');
+  if (textSpan) {
+    textSpan.textContent = text;
+  }
+};
+
+WindowController.prototype.onAutosaveIndicatorClick_ = function(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  var currentTab = this.tabs_.getCurrentTab();
+  if (!currentTab) return;
+
+  if (!currentTab.isSaved() || currentTab.isMissing() || currentTab.saveError_) {
+    this.tabs_.save(currentTab);
+  }
+};
+
+WindowController.prototype.updateAutosaveIndicator_ = function() {
+  this.ensureAutosaveIndicatorDom_();
+  var indicator = $('#autosave-indicator');
+  var icon = $('#autosave-indicator-icon');
+  if (!indicator.length || !icon.length) return;
+
+  var currentTab = this.tabs_.getCurrentTab();
+  if (!currentTab) {
+    indicator.hide();
+    return;
+  }
+
+  indicator.show();
+  indicator.removeClass('status-saved status-saving status-unsaved status-error status-missing');
+
+  if (currentTab.isMissing()) {
+    indicator.addClass('status-missing');
+    icon.attr('src', 'assets/sync_error.svg');
+    indicator.attr('title', chrome.i18n.getMessage('missingFileIndicator') || 'File is missing in location - click to Save As');
+    indicator.attr('aria-label', 'File missing in location');
+  } else if (currentTab.saveError_) {
+    indicator.addClass('status-error');
+    icon.attr('src', 'assets/sync_error.svg');
+    indicator.attr('title', chrome.i18n.getMessage('saveErrorIndicator') || 'Error saving changes - click to retry');
+    indicator.attr('aria-label', 'Error saving changes');
+  } else if (currentTab.isSaving_ || currentTab.autoSaveTimeout_) {
+    indicator.addClass('status-saving');
+    icon.attr('src', 'assets/auto_saving.svg');
+    indicator.attr('title', chrome.i18n.getMessage('savingIndicator') || 'Saving changes...');
+    indicator.attr('aria-label', 'Saving changes');
+  } else if (currentTab.isSaved()) {
+    indicator.addClass('status-saved');
+    icon.attr('src', 'assets/autosaved.svg');
+    indicator.attr('title', chrome.i18n.getMessage('savedIndicator') || 'All changes saved');
+    indicator.attr('aria-label', 'All changes saved');
+  } else {
+    indicator.addClass('status-unsaved');
+    icon.attr('src', 'assets/save.svg');
+    indicator.attr('title', chrome.i18n.getMessage('unsavedIndicator') || 'Unsaved changes - click to save');
+    indicator.attr('aria-label', 'Unsaved changes');
+  }
+};
+
 WindowController.prototype.onLoadingFile = function(e) {
-  $('#title-filename').text(chrome.i18n.getMessage('loadingTitle'));
+  this.setTitleText_(chrome.i18n.getMessage('loadingTitle'));
+  $('#autosave-indicator').hide();
 };
 
 WindowController.prototype.onFileSystemError = function(e) {
-  $('#title-filename').text(chrome.i18n.getMessage('errorTitle'));
+  this.setTitleText_(chrome.i18n.getMessage('errorTitle'));
+  $('#autosave-indicator').hide();
 };
 
 WindowController.prototype.onChangeTab_ = function(e, tab) {
-  $('#title-filename').text(tab.getName());
+  if (tab) {
+    this.setTitleText_(tab.getName());
+    this.onTabPathChange(e, tab);
+  }
   this.onTabChange_();
 };
 
 WindowController.prototype.onTabPathChange = function(e, tab) {
-  $('#title-filename').attr('title', tab.getPath());
+  var path = (tab && tab.getPath()) || '';
+  if (tab && tab.isMissing()) {
+    path = path ? (path + ' (File missing)') : 'File missing';
+  }
+  $('#title-filename').attr('title', path);
 };
 
 WindowController.prototype.onTabChange_ = function(e, tab) {
-  if (this.tabs_.getCurrentTab().isSaved()) {
+  var currentTab = this.tabs_.getCurrentTab();
+  if (currentTab && currentTab.isSaved()) {
     $('#title-filename').removeClass('unsaved');
   } else {
     $('#title-filename').addClass('unsaved');
+  }
+  this.updateAutosaveIndicator_();
+};
+
+WindowController.prototype.onTabMissingChange_ = function(e, tab) {
+  this.onTabPathChange(e, tab);
+  this.updateAutosaveIndicator_();
+};
+
+WindowController.prototype.onSettingsChange_ = function(e, key, value) {
+  if (key === 'autosave') {
+    this.updateAutosaveIndicator_();
   }
 };
 

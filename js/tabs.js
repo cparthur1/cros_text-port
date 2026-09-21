@@ -133,12 +133,15 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
   }
 
   this.isSaving_ = true;
+  this.saveError_ = false;
+  $.event.trigger('tabsaving', this);
   var contentToSave = this.getContent_();
 
   util.writeFile(
     this.entry_, contentToSave,
     function() {
       this.isSaving_ = false;
+      this.saveError_ = false;
 
       var callbacks = this.pendingSaveCallbacks_.slice();
       this.pendingSaveCallbacks_ = [];
@@ -162,6 +165,8 @@ Tab.prototype.save = function(opt_callbackDone, opt_isAutosave) {
     function(e) {
       this.isSaving_ = false;
       this.savePending_ = false;
+      this.saveError_ = true;
+      $.event.trigger('tabsaveerror', this);
       var callbacks = this.pendingSaveCallbacks_.slice();
       this.pendingSaveCallbacks_ = [];
 
@@ -190,6 +195,7 @@ Tab.prototype.isSaved = function() {
 };
 
 Tab.prototype.changed = function() {
+  this.saveError_ = false;
   if (this.saved_) {
     this.saved_ = false;
     $.event.trigger('tabchange', this);
@@ -715,6 +721,8 @@ Tabs.prototype.scheduleAutoSave_ = function(tab) {
   if (tab.autoSaveTimeout_) {
     clearTimeout(tab.autoSaveTimeout_);
   }
+
+  $.event.trigger('tabsaving', tab);
 
   tab.autoSaveTimeout_ = setTimeout(function() {
     tab.autoSaveTimeout_ = null;

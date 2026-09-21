@@ -729,18 +729,80 @@ header.search-active .search-toggle-button {
 }
 
 #title-filename {
+  align-items: center;
   color: var(--ta-filename-text-color);
   display: flex;
   flex: 1;
   font-size: 15px;
   justify-content: center;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   -webkit-transition: all 200ms ease-in-out;
   white-space: nowrap;
 }
 
-#title-filename.unsaved:after {
+.autosave-indicator {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  margin-right: 6px;
+  outline: none;
+  padding: 0;
+  position: relative;
+  transition: opacity 150ms ease, background-color 150ms ease;
+  width: 24px;
+  -webkit-app-region: no-drag;
+}
+
+.autosave-indicator:hover {
+  background-color: var(--ta-accent-color);
+}
+
+.autosave-indicator:focus-visible {
+  outline: 2px solid -webkit-focus-ring-color;
+}
+
+.autosave-indicator-icon {
+  display: block;
+  height: 18px;
+  width: 18px;
+  transition: transform 200ms ease;
+}
+
+.autosave-indicator.status-saving .autosave-indicator-icon {
+  animation: autosave-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes autosave-pulse {
+  0% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.85; }
+}
+
+body[theme="dark"] .autosave-indicator-icon {
+  filter: brightness(1.8);
+}
+
+body[theme="dark"] .autosave-indicator.status-unsaved .autosave-indicator-icon {
+  filter: invert(1) brightness(0.9);
+}
+
+#title-filename-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+#title-filename.unsaved #title-filename-text:after,
+#title-filename.unsaved:not(:has(#title-filename-text)):after {
   content: " *";
 }
 

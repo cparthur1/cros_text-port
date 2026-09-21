@@ -202,5 +202,25 @@
   "replaceAllButtonTitle": {
     "message": "Replace all",
     "description": "Tooltip for the replace all button."
+  },
+  "savingIndicator": {
+    "message": "Saving changes...",
+    "description": "Tooltip for the autosave in progress indicator."
+  },
+  "savedIndicator": {
+    "message": "All changes saved",
+    "description": "Tooltip for the autosave completed indicator."
+  },
+  "unsavedIndicator": {
+    "message": "Unsaved changes - click to save",
+    "description": "Tooltip for the unsaved changes indicator."
+  },
+  "saveErrorIndicator": {
+    "message": "Error saving changes - click to retry",
+    "description": "Tooltip for the save error indicator."
+  },
+  "missingFileIndicator": {
+    "message": "File is missing in location - click to Save As",
+    "description": "Tooltip for the missing file indicator."
   }
 }
