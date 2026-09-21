@@ -511,3 +511,32 @@ EditorCodeMirror.prototype.getSelectedText = function() {
   if (selection.empty) return '';
   return this.editorView_.state.sliceDoc(selection.from, selection.to);
 };
+
+/**
+ * Undoes the last change in the editor.
+ * @return {boolean}
+ */
+EditorCodeMirror.prototype.undo = function() {
+  if (!this.editorView_ || !window.CodeMirror || !window.CodeMirror.commands || !window.CodeMirror.commands.undo) {
+    return false;
+  }
+  return window.CodeMirror.commands.undo({
+    state: this.editorView_.state,
+    dispatch: this.editorView_.dispatch
+  });
+};
+
+/**
+ * Redoes the last undone change in the editor.
+ * @return {boolean}
+ */
+EditorCodeMirror.prototype.redo = function() {
+  if (!this.editorView_ || !window.CodeMirror || !window.CodeMirror.commands || !window.CodeMirror.commands.redo) {
+    return false;
+  }
+  return window.CodeMirror.commands.redo({
+    state: this.editorView_.state,
+    dispatch: this.editorView_.dispatch
+  });
+};
+

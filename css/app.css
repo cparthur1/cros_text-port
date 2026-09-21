@@ -1327,3 +1327,293 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   text-align: center;
   user-select: none;
 }
+
+/* HotBar Status Modal */
+.hotbar-modal {
+  align-items: center;
+  display: none;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10000;
+}
+
+.hotbar-modal.open {
+  display: flex;
+}
+
+.hotbar-modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.hotbar-modal-window {
+  background-color: var(--ta-background-color);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  color: var(--ta-ui-text-color);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  max-width: 620px;
+  overflow: hidden;
+  position: relative;
+  width: 90%;
+  z-index: 1;
+}
+
+.hotbar-modal-header {
+  align-items: center;
+  background-color: var(--ta-accent-color);
+  border-bottom: 1px solid var(--ta-divider-color);
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 18px;
+}
+
+.hotbar-modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.hotbar-modal-header h2 {
+  font-size: 17px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.hotbar-subtitle {
+  font-size: 11px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.hotbar-close-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font-size: 20px;
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  opacity: 0.7;
+  padding: 0;
+  transition: opacity 150ms, background-color 150ms;
+  width: 32px;
+}
+
+.hotbar-close-btn:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+  opacity: 1;
+}
+
+.hotbar-help-banner {
+  align-items: center;
+  background-color: rgba(128, 128, 128, 0.08);
+  border-bottom: 1px solid var(--ta-divider-color);
+  display: flex;
+  font-size: 12px;
+  justify-content: space-around;
+  padding: 8px 16px;
+}
+
+.hotbar-help-item {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.hotbar-help-kbd {
+  background-color: var(--ta-accent-color);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+}
+
+.hotbar-help-desc {
+  opacity: 0.8;
+}
+
+.hotbar-help-divider {
+  background-color: var(--ta-divider-color);
+  height: 16px;
+  width: 1px;
+}
+
+.hotbar-slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.hotbar-slot-row {
+  align-items: center;
+  background-color: rgba(128, 128, 128, 0.05);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 12px;
+  transition: background-color 150ms;
+}
+
+.hotbar-slot-row.has-content {
+  background-color: rgba(128, 128, 128, 0.1);
+  border-color: rgba(128, 128, 128, 0.35);
+}
+
+.hotbar-slot-badge {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 72px;
+}
+
+.hotbar-slot-num {
+  align-items: center;
+  background-color: var(--mdc-theme-secondary);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  font-size: 13px;
+  font-weight: bold;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.hotbar-slot-chord {
+  font-size: 9px;
+  margin-top: 2px;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.hotbar-slot-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hotbar-empty-placeholder {
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.45;
+}
+
+.hotbar-snippet-preview {
+  background-color: var(--ta-background-color);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+  max-height: 60px;
+  overflow: hidden;
+  padding: 4px 8px;
+  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.hotbar-slot-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.hotbar-action-btn {
+  background-color: var(--ta-accent-color);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  transition: background-color 150ms, opacity 150ms;
+}
+
+.hotbar-action-btn:hover {
+  background-color: var(--ta-highlight-color);
+}
+
+.hotbar-paste-btn {
+  background-color: var(--mdc-theme-secondary);
+  border-color: var(--mdc-theme-secondary);
+  color: #fff;
+}
+
+.hotbar-paste-btn:hover {
+  filter: brightness(1.1);
+}
+
+.hotbar-clear-btn {
+  opacity: 0.7;
+}
+
+.hotbar-clear-btn:hover {
+  background-color: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.5);
+  color: #e57373;
+  opacity: 1;
+}
+
+.hotbar-modal-footer {
+  align-items: center;
+  background-color: var(--ta-accent-color);
+  border-top: 1px solid var(--ta-divider-color);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 18px;
+}
+
+.hotbar-footer-btn {
+  background-color: transparent;
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 6px 14px;
+  transition: background-color 150ms;
+}
+
+.hotbar-footer-btn:hover {
+  background-color: rgba(128, 128, 128, 0.2);
+}
+
+.hotbar-footer-close {
+  background-color: var(--mdc-theme-secondary);
+  border-color: var(--mdc-theme-secondary);
+  color: #fff;
+  font-weight: 500;
+}
+
+.hotbar-footer-close:hover {
+  filter: brightness(1.1);
+}
+

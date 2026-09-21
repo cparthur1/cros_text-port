@@ -1,4 +1,4 @@
-const CACHE_NAME = 'text-app-v10';
+const CACHE_NAME = 'text-app-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ const ASSETS = [
   './js/tabs.js',
   './js/util.js',
   './js/controllers/dialog.js',
+  './js/controllers/hotbar.js',
   './js/controllers/hotkeys.js',
   './js/controllers/menu.js',
   './js/controllers/search.js',
