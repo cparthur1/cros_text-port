@@ -1,7 +1,8 @@
-const CACHE_NAME = 'text-app-v11';
+const CACHE_NAME = 'text-app-v12';
 const ASSETS = [
   './',
   './index.html',
+  './pwa-manifest.json',
   './css/app.css',
   './css/print.css',
   './assets/missing_file.svg',

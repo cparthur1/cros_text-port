@@ -1,11 +1,18 @@
 {
-  "name": "Text Dev",
+  "name": "Text",
   "short_name": "Text",
   "description": "A cross-platform text editor.",
   "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "categories": [
+    "utilities",
+    "productivity",
+    "developer tools"
+  ],
   "icons": [
     {
       "src": "icon/16x16.png",
@@ -40,7 +47,8 @@
     {
       "src": "icon/256x256.png",
       "sizes": "256x256",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon/maskable.svg",
@@ -49,15 +57,40 @@
       "purpose": "maskable"
     }
   ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "file_handlers": [
     {
       "action": "./index.html",
+      "name": "Text document",
+      "icons": [
+        {
+          "src": "icon/256x256.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
       "accept": {
-        "text/plain": [".txt", ".md", ".js", ".json", ".css", ".html", ".py", ".sh", ".yaml", ".yml"]
+        "text/plain": [".txt", ".text", ".log", ".ini", ".conf", ".cfg"],
+        "text/markdown": [".md", ".markdown", ".mdown", ".mkd"],
+        "text/javascript": [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"],
+        "text/css": [".css", ".scss", ".less"],
+        "text/html": [".html", ".htm", ".xhtml"],
+        "application/json": [".json", ".jsonld"],
+        "text/x-python": [".py", ".pyw"],
+        "text/x-shellscript": [".sh", ".bash", ".zsh"],
+        "text/x-yaml": [".yaml", ".yml"],
+        "text/xml": [".xml", ".svg"],
+        "text/x-csrc": [".c", ".h"],
+        "text/x-c++src": [".cpp", ".cc", ".cxx", ".hpp", ".hh"],
+        "text/x-java-source": [".java"],
+        "text/x-go": [".go"],
+        "text/x-rust": [".rs"],
+        "text/x-sql": [".sql"],
+        "text/x-lua": [".lua"],
+        "text/x-diff": [".diff", ".patch"]
       }
     }
-  ],
-  "launch_handler": {
-    "client_mode": "focus-existing"
-  }
+  ]
 }

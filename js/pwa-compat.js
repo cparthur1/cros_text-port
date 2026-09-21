@@ -570,20 +570,26 @@
   // --- File Handling API ---
   if ('launchQueue' in window) {
     window.launchQueue.setConsumer(function(launchParams) {
-      if (!launchParams.files.length) return;
-      
+      if (!launchParams || !launchParams.files || !launchParams.files.length) return;
+
       var entries = launchParams.files.map(function(handle) {
         return new FileEntryPolyfill(handle);
       });
-      
+
       var launchData = {
         items: entries.map(function(entry) {
           return { entry: entry };
         })
       };
 
-      if (onLaunchedCallbacks.length > 0) {
+      if (!launched && onLaunchedCallbacks.length > 0) {
         triggerLaunch(launchData);
+      } else if (launched && window.textApp && window.textApp.tabs_) {
+        // App is already running and focused (client_mode: "focus-existing").
+        // Open the received file entries directly as tabs.
+        for (var i = 0; i < entries.length; i++) {
+          window.textApp.tabs_.openFileEntry(entries[i]);
+        }
       } else {
         pendingLaunchData = launchData;
       }
