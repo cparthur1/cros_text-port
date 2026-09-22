@@ -1,7 +1,7 @@
 /**
  * @fileoverview HotBar text snippets controller.
- * Supports saving snippets to 10 compartments (1-9, 0) via Ctrl+C+[0-9],
- * and pasting snippets from compartments via Ctrl+V+[0-9].
+ * Supports saving snippets to 10 compartments (1-9, 0) via Shift+C+[0-9],
+ * and pasting snippets from compartments via Shift+V+[0-9].
  * Provides a HotBar Status modal accessible from the sidebar button.
  */
 
@@ -20,7 +20,6 @@ function HotbarController(editor) {
   this.slotsContainer_ = null;
 
   this.boundOnKeydown_ = this.onKeydown_.bind(this);
-  this.boundOnPaste_ = this.onPaste_.bind(this);
   this.boundOnMousedown_ = this.onMousedown_.bind(this);
 
   this.initSlots_();
@@ -118,13 +117,12 @@ HotbarController.prototype.clearAll = function() {
 };
 
 /**
- * Sets up listeners for shortcuts, paste events, and sidebar button.
+ * Sets up listeners for shortcuts and sidebar button.
  * @private
  */
 HotbarController.prototype.attachListeners_ = function() {
   // Capture phase ensures we intercept before CM6 or other handlers consume keys
   document.addEventListener('keydown', this.boundOnKeydown_, true);
-  window.addEventListener('paste', this.boundOnPaste_, true);
   document.addEventListener('mousedown', this.boundOnMousedown_, true);
 
   var openBtn = document.getElementById('open-hotbar');
@@ -141,8 +139,10 @@ HotbarController.prototype.attachListeners_ = function() {
  */
 HotbarController.prototype.getDigit_ = function(e) {
   if (e.key && /^[0-9]$/.test(e.key)) return e.key;
-  if (e.code && /^Digit([0-9])$/.test(e.code)) return RegExp.$1;
-  if (e.code && /^Numpad([0-9])$/.test(e.code)) return RegExp.$1;
+  var mCode = e.code && e.code.match(/^Digit([0-9])$/);
+  if (mCode) return mCode[1];
+  var mNum = e.code && e.code.match(/^Numpad([0-9])$/);
+  if (mNum) return mNum[1];
   return null;
 };
 
@@ -174,12 +174,24 @@ HotbarController.prototype.onKeydown_ = function(e) {
       this.closeModal();
       return;
     }
+    return;
   }
 
-  var isCtrlOrCmd = e.ctrlKey || e.metaKey;
+  // Ignore keystrokes in standalone input fields (e.g. search, replace)
+  var target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+    return;
+  }
 
-  // 1. Check for Ctrl+C / Cmd+C (Copy chord initiation)
-  if (isCtrlOrCmd && !e.altKey && (e.key === 'c' || e.key === 'C')) {
+  var isShift = e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey;
+
+  // 1. Check for Shift+C (Copy chord initiation)
+  if (isShift && (e.key === 'c' || e.key === 'C' || e.code === 'KeyC')) {
+    var inEditor = !!(this.editor_ && this.editor_.editorView_ && (
+      this.editor_.editorView_.hasFocus ||
+      (this.editor_.editorView_.dom && this.editor_.editorView_.dom.contains(document.activeElement))
+    ));
+
     var sel = '';
     if (this.editor_ && typeof this.editor_.getSelectedText === 'function') {
       sel = this.editor_.getSelectedText();
@@ -189,25 +201,39 @@ HotbarController.prototype.onKeydown_ = function(e) {
       if (winSel) sel = winSel.toString();
     }
 
+    if (this.pending_ && this.pending_.inEditor && this.editor_ && typeof this.editor_.undo === 'function') {
+      this.editor_.undo();
+    }
+
     this.pending_ = {
       action: 'copy',
       time: Date.now(),
-      text: sel
+      text: sel,
+      inEditor: inEditor
     };
     this.startPendingTimer_();
-    // Do not preventDefault: normal system clipboard copy continues
+    // Do not preventDefault: normal typing of capital 'C' proceeds if no number follows
     return;
   }
 
-  // 2. Check for Ctrl+V / Cmd+V (Paste chord initiation)
-  if (isCtrlOrCmd && !e.altKey && (e.key === 'v' || e.key === 'V')) {
+  // 2. Check for Shift+V (Paste chord initiation)
+  if (isShift && (e.key === 'v' || e.key === 'V' || e.code === 'KeyV')) {
+    var inEditor = !!(this.editor_ && this.editor_.editorView_ && (
+      this.editor_.editorView_.hasFocus ||
+      (this.editor_.editorView_.dom && this.editor_.editorView_.dom.contains(document.activeElement))
+    ));
+
+    if (this.pending_ && this.pending_.inEditor && this.editor_ && typeof this.editor_.undo === 'function') {
+      this.editor_.undo();
+    }
+
     this.pending_ = {
       action: 'paste',
       time: Date.now(),
-      pasted: false
+      inEditor: inEditor
     };
     this.startPendingTimer_();
-    // Do not preventDefault: normal system clipboard paste occurs if no number follows
+    // Do not preventDefault: normal typing of capital 'V' proceeds if no number follows
     return;
   }
 
@@ -215,15 +241,32 @@ HotbarController.prototype.onKeydown_ = function(e) {
   if (this.pending_) {
     var digit = this.getDigit_(e);
     if (digit !== null) {
+      var action = this.pending_.action;
+      var pending = this.pending_;
+
+      // If copy action had no selected text and Shift was not held on digit, treat as normal typing (e.g. typing "C1")
+      if (action === 'copy' && !pending.text && !e.shiftKey) {
+        this.clearPending_();
+        return;
+      }
+
+      // If paste action has empty slot and Shift was not held on digit, treat as normal typing (e.g. typing "V1")
+      if (action === 'paste' && !this.getSlot(digit) && !e.shiftKey) {
+        this.clearPending_();
+        return;
+      }
+
       // Consume the digit key
       e.preventDefault();
       e.stopPropagation();
-
-      var action = this.pending_.action;
-      var pending = this.pending_;
       this.clearPending_();
 
       if (action === 'copy') {
+        if (pending.inEditor && this.editor_ && typeof this.editor_.undo === 'function') {
+          // Revert the 'C' that replaced the selection or was typed
+          this.editor_.undo();
+        }
+
         var textToSave = pending.text;
         if (!textToSave && this.editor_) {
           textToSave = this.editor_.getSelectedText();
@@ -240,8 +283,8 @@ HotbarController.prototype.onKeydown_ = function(e) {
           util.showToast('HotBar [' + digit + ']: No text selected to save');
         }
       } else if (action === 'paste') {
-        if (pending.pasted && this.editor_) {
-          // Revert the clipboard paste that just occurred
+        if (pending.inEditor && this.editor_ && typeof this.editor_.undo === 'function') {
+          // Revert the 'V' that was typed
           this.editor_.undo();
         }
         var snippet = this.getSlot(digit);
@@ -263,17 +306,6 @@ HotbarController.prototype.onKeydown_ = function(e) {
       // Any other regular key cancels the pending chord immediately
       this.clearPending_();
     }
-  }
-};
-
-/**
- * Tracks when a paste event occurs.
- * @param {!ClipboardEvent} e
- * @private
- */
-HotbarController.prototype.onPaste_ = function(e) {
-  if (this.pending_ && this.pending_.action === 'paste') {
-    this.pending_.pasted = true;
   }
 };
 
@@ -374,14 +406,14 @@ HotbarController.prototype.initDom_ = function() {
 
   var helpSave = document.createElement('div');
   helpSave.className = 'hotbar-help-item';
-  helpSave.innerHTML = '<span class="hotbar-help-kbd">Ctrl + C + [0-9]</span><span class="hotbar-help-desc">Save selection to slot</span>';
+  helpSave.innerHTML = '<span class="hotbar-help-kbd">Shift + C + [0-9]</span><span class="hotbar-help-desc">Save selection to slot</span>';
 
   var helpDiv = document.createElement('div');
   helpDiv.className = 'hotbar-help-divider';
 
   var helpPaste = document.createElement('div');
   helpPaste.className = 'hotbar-help-item';
-  helpPaste.innerHTML = '<span class="hotbar-help-kbd">Ctrl + V + [0-9]</span><span class="hotbar-help-desc">Paste snippet to file</span>';
+  helpPaste.innerHTML = '<span class="hotbar-help-kbd">Shift + V + [0-9]</span><span class="hotbar-help-desc">Paste snippet to file</span>';
 
   helpBanner.appendChild(helpSave);
   helpBanner.appendChild(helpDiv);
@@ -449,7 +481,7 @@ HotbarController.prototype.renderModalSlots_ = function() {
 
     var chord = document.createElement('span');
     chord.className = 'hotbar-slot-chord';
-    chord.textContent = 'Ctrl+C/V+' + key;
+    chord.textContent = 'Shift+C/V+' + key;
 
     badge.appendChild(num);
     badge.appendChild(chord);
@@ -467,7 +499,7 @@ HotbarController.prototype.renderModalSlots_ = function() {
     } else {
       var emptyNotice = document.createElement('span');
       emptyNotice.className = 'hotbar-empty-placeholder';
-      emptyNotice.textContent = '(Empty - select text and press Ctrl+C+' + key + ')';
+      emptyNotice.textContent = '(Empty - select text and press Shift+C+' + key + ')';
       contentWrap.appendChild(emptyNotice);
     }
     row.appendChild(contentWrap);
