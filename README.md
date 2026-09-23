@@ -29,7 +29,7 @@ While the original Chrome app was archived and built around legacy Chrome Apps A
 * **Find and Replace (`Ctrl+F` / `Ctrl+H`)**: Search with live match counts, match navigation, inline replace, and replace-all.
 * **Bottom Status Bar**: Real-time cursor position (Line, Column), selection count, word count, character count, and syntax mode.
 * **Quick Symbols Menu (`Alt+S`)**: Searchable, categorized modal palette to insert mathematical, arrows, Greek, shapes, fractions, typographical symbols, and undo/redo (`⟲`, `⟳`).
-* **Text Snippet HotBar (`Shift+C+[0-9]` / `Shift+V+[0-9]`)**: 10-slot instant clipboard hotbar for fast snippet copy/pasting, accompanied by a sidebar HotBar Status viewer.
+* **Text Snippet HotBar (`Alt+C` / `Alt+V`)**: 10-slot horizontal clipboard hotbar with snippet preview squares for instant snippet overwriting and pasting.
 * **Refined Header Layout**: Left-aligned document title with right-aligned quick search and navigation.
 
 ### 🌐 Cross-Platform & Offline
@@ -52,8 +52,8 @@ While the original Chrome app was archived and built around legacy Chrome Apps A
 | `Ctrl` + `F` | Find / Search |
 | `Ctrl` + `H` | Replace |
 | `Alt` + `S` | Open Quick Symbols Menu |
-| `Shift` + `C` + `[0-9]` | Copy selected text to Snippet HotBar slot 0–9 |
-| `Shift` + `V` + `[0-9]` | Paste text from Snippet HotBar slot 0–9 |
+| `Alt` + `C` | Open HotBar to overwrite slot with selected snippet |
+| `Alt` + `V` | Open HotBar to paste snippet from slot |
 | `Ctrl` + `Z` / `Ctrl` + `Y` | Undo / Redo |
 
 ---

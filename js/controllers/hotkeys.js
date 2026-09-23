@@ -133,6 +133,14 @@ HotkeysController.prototype.onKeydown_ = function(e) {
       e.preventDefault();
       util.triggerEvent('opensymbols');
       return false;
+    } else if (e.key === 'c' || e.key === 'C') {
+      e.preventDefault();
+      util.triggerEvent('openhotbarcopy');
+      return false;
+    } else if (e.key === 'v' || e.key === 'V') {
+      e.preventDefault();
+      util.triggerEvent('openhotbarpaste');
+      return false;
     }
   }
 };

@@ -260,16 +260,8 @@ function Tabs(editor, dialogController, settings) {
       this.onWindowBlur_();
     }
   }.bind(this));
-  window.addEventListener('beforeunload', function(e) {
+  window.addEventListener('pagehide', function() {
     this.saveSession_();
-    if (this.settings_.get('autosave')) {
-      this.onWindowBlur_();
-    }
-    if (this.hasUnsavedTabs()) {
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    }
   }.bind(this));
 }
 
@@ -832,9 +824,6 @@ Tabs.prototype.saveSession_ = function() {
     var tab = this.tabs_[i];
     var entry = tab.getEntry();
     var handleId = (entry && entry.handleId) || tab.handleId_ || null;
-    if (entry && entry.handleId && entry.handle && window.chrome && window.chrome.fileSystem && window.chrome.fileSystem.storeHandle) {
-      window.chrome.fileSystem.storeHandle(entry.handleId, entry.handle);
-    }
     var content = '';
     try {
       content = tab.getContent_();
