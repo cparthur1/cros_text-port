@@ -667,8 +667,8 @@ body[theme="light"] #sidebar .mdc-icon-button:focus {
   width: 100%;
   min-width: 320px;
   height: auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   z-index: 100;
   overflow: visible;
 }
@@ -1026,8 +1026,6 @@ input[type=search]:focus {
   left: 0;
   z-index: 10002;
   background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   align-items: center;
   justify-content: center;
 }
@@ -1038,9 +1036,9 @@ input[type=search]:focus {
 
 .dialog-window {
   background-color: var(--ta-background-color);
-  border: 1px solid var(--ta-search-border-color);
-  border-radius: 12px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--ta-divider-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   color: var(--ta-ui-text-color);
   max-width: 520px;
   min-width: 320px;
@@ -1072,7 +1070,7 @@ input[type=search]:focus {
   align-items: center;
   background-color: var(--ta-accent-color);
   border: 1px solid var(--ta-search-button-divider-color);
-  border-radius: 6px;
+  border-radius: 4px;
   color: var(--ta-ui-text-color);
   cursor: pointer;
   display: inline-flex;
@@ -1121,9 +1119,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 /* Drag and Drop File Overlay */
 .drag-drop-overlay {
   align-items: center;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: rgba(0, 0, 0, 0.4);
   bottom: 0;
   display: flex;
   justify-content: center;
@@ -1133,7 +1129,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   position: fixed;
   right: 0;
   top: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 150ms ease;
   z-index: 9999;
 }
 
@@ -1145,20 +1141,14 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   align-items: center;
   background-color: var(--ta-background-color);
   border: 2px dashed var(--mdc-theme-secondary);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   color: var(--ta-ui-text-color);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 40px 60px;
+  padding: 32px 48px;
   pointer-events: none;
-  transform: scale(0.95);
-  transition: transform 180ms cubic-bezier(0.1, 0.9, 0.2, 1);
-}
-
-.drag-drop-overlay.active .drag-drop-content {
-  transform: scale(1);
 }
 
 .drag-drop-icon {
@@ -1177,9 +1167,9 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   align-items: center;
   background-color: var(--ta-background-color);
   border: 1px solid var(--ta-divider-color);
-  border-radius: 8px;
+  border-radius: 4px;
   bottom: 40px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   color: var(--ta-ui-text-color);
   display: flex;
   font-size: 13px;
@@ -1187,11 +1177,11 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   left: 50%;
   max-width: 90%;
   opacity: 0;
-  padding: 10px 20px;
+  padding: 8px 16px;
   pointer-events: none;
   position: fixed;
-  transform: translateX(-50%) translateY(16px);
-  transition: opacity 180ms ease, transform 180ms ease;
+  transform: translateX(-50%) translateY(12px);
+  transition: opacity 150ms ease, transform 150ms ease;
   z-index: 10001;
 }
 
@@ -1219,9 +1209,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 }
 
 .symbols-backdrop {
-  background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.4);
   bottom: 0;
   left: 0;
   position: absolute;
@@ -1232,8 +1220,8 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 .symbols-dialog {
   background-color: var(--ta-background-color);
   border: 1px solid var(--ta-divider-color);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
   color: var(--ta-ui-text-color);
   display: flex;
@@ -1244,12 +1232,12 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   width: 92%;
   z-index: 1;
   overflow: hidden;
-  animation: symbols-scale-in 150ms ease-out;
+  animation: symbols-fade-in 120ms ease-out;
 }
 
-@keyframes symbols-scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes symbols-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .symbols-header {
@@ -1275,7 +1263,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 
 .symbols-shortcut-badge {
   background-color: var(--ta-accent-color);
-  border-radius: 4px;
+  border-radius: 3px;
   font-size: 11px;
   font-weight: 600;
   opacity: 0.8;
@@ -1382,7 +1370,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   align-items: center;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 4px;
   color: inherit;
   cursor: pointer;
   display: flex;
@@ -1390,19 +1378,17 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   font-size: 20px;
   height: 42px;
   justify-content: center;
-  transition: transform 100ms ease, background-color 120ms ease, border-color 120ms ease;
+  transition: background-color 120ms ease;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .symbol-btn:hover {
   background-color: var(--ta-accent-color);
-  border-color: var(--ta-divider-color);
-  transform: scale(1.15);
+  border-color: transparent;
 }
 
 .symbol-btn:active {
-  transform: scale(0.95);
   background-color: var(--ta-highlight-color);
 }
 
@@ -1446,9 +1432,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 }
 
 .hotbar-backdrop {
-  background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
   left: 0;
   position: absolute;
@@ -1459,8 +1443,8 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 .hotbar-bar {
   background-color: var(--ta-background-color);
   border: 1px solid var(--ta-divider-color);
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   color: var(--ta-ui-text-color);
   display: flex;
   flex-direction: column;
@@ -1469,17 +1453,17 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   position: relative;
   width: 95%;
   z-index: 1;
-  animation: hotbarSlideDown 150ms cubic-bezier(0, 0, 0.2, 1);
+  animation: hotbarSlideDown 120ms ease-out;
 }
 
 @keyframes hotbarSlideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -1500,7 +1484,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 }
 
 .hotbar-mode-badge {
-  border-radius: 4px;
+  border-radius: 3px;
   color: #fff;
   font-family: monospace;
   font-size: 11px;
@@ -1592,7 +1576,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 .hotbar-banner-snippet {
   background-color: var(--ta-background-color);
   border: 1px solid var(--ta-divider-color);
-  border-radius: 4px;
+  border-radius: 3px;
   font-family: monospace;
   font-size: 11px;
   padding: 2px 6px;
@@ -1617,7 +1601,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   align-items: center;
   background-color: rgba(128, 128, 128, 0.08);
   border: 1px dashed var(--ta-divider-color);
-  border-radius: 8px;
+  border-radius: 4px;
   box-sizing: border-box;
   color: inherit;
   cursor: pointer;
@@ -1629,7 +1613,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   justify-content: space-between;
   padding: 6px 4px;
   position: relative;
-  transition: border-color 150ms, background-color 150ms, transform 150ms, box-shadow 150ms;
+  transition: border-color 150ms, background-color 150ms;
   user-select: none;
   width: 76px;
 }
@@ -1642,7 +1626,6 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 .hotbar-square:hover,
 .hotbar-square:focus-visible {
   outline: none;
-  transform: translateY(-2px);
 }
 
 /* Mode Save hover */
@@ -1650,21 +1633,19 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 .hotbar-bar.mode-save .hotbar-square:focus-visible {
   background-color: rgba(15, 157, 88, 0.12);
   border-color: #0f9d58;
-  box-shadow: 0 4px 12px rgba(15, 157, 88, 0.25);
 }
 
 /* Mode Paste hover */
 .hotbar-bar.mode-paste .hotbar-square:hover,
 .hotbar-bar.mode-paste .hotbar-square:focus-visible {
-  background-color: rgba(26, 115, 232, 0.12);
+  background-color: var(--ta-highlight-color);
   border-color: var(--mdc-theme-secondary, #1a73e8);
-  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
 }
 
 .hotbar-square-num {
   align-items: center;
   background-color: rgba(128, 128, 128, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
   color: inherit;
   display: flex;
   font-size: 11px;
@@ -1831,16 +1812,14 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   font-weight: 600;
   opacity: 0.75;
   padding: 1px 6px;
-  border-radius: 10px;
+  border-radius: 100px;
   background-color: var(--ta-accent-color);
-  border: 1px solid var(--ta-divider-color);
   white-space: nowrap;
 }
 
 .app-storage-count.full {
   background-color: rgba(229, 115, 115, 0.2);
   color: #e57373;
-  border-color: rgba(229, 115, 115, 0.4);
 }
 
 .app-storage-chevron {
@@ -1855,21 +1834,21 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 }
 
 .app-storage-folder-content {
-  background-color: rgba(128, 128, 128, 0.05);
+  background-color: var(--ta-accent-color);
   border: 1px solid var(--ta-divider-color);
-  border-radius: 8px;
+  border-radius: 4px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 4px 6px 8px 6px;
-  padding: 6px;
+  gap: 2px;
+  margin: 2px 8px 8px 8px;
+  padding: 4px;
 }
 
 .app-storage-file-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   list-style: none;
   margin: 0;
   max-height: 220px;
@@ -1887,19 +1866,19 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
 
 .app-storage-file-item {
   align-items: center;
-  background-color: var(--ta-background-color);
-  border: 1px solid var(--ta-divider-color);
-  border-radius: 6px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
   display: flex;
   gap: 6px;
   min-height: 32px;
   padding: 4px 6px;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition: background-color 120ms ease;
 }
 
 .app-storage-file-item:hover {
-  background-color: var(--ta-accent-color);
-  border-color: var(--ta-search-button-divider-color);
+  background-color: var(--ta-highlight-color);
+  color: var(--ta-ui-highlight-text-color);
 }
 
 .app-storage-file-icon {
@@ -1942,7 +1921,7 @@ header.search-active ~ #editor div.cm-editor .cm-searchMatch {
   align-items: center;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   color: var(--ta-ui-text-color);
   cursor: pointer;
   display: inline-flex;
