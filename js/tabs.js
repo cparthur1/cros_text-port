@@ -631,18 +631,55 @@ Tabs.prototype.getFilesToRetain = function() {
   return toRetain;
 };
 
-Tabs.prototype.openFileEntry = function(entry) {
-  if (!entry) return;
-  chrome.fileSystem.getDisplayPath(entry, function(path) {
-    for (var i = 0; i < this.tabs_.length; i++) {
-      if (this.tabs_[i].getPath() === path) {
-        this.showTab(this.tabs_[i].getId());
-        return;
-      }
+Tabs.prototype.openFileEntry = function(entry, opt_callback) {
+  var self = this;
+  return new Promise(function(resolve) {
+    var done = function(res) {
+      if (opt_callback) opt_callback(res);
+      resolve(res);
+    };
+
+    if (!entry) {
+      done(null);
+      return;
     }
 
-    entry.file(this.readFileToNewTab_.bind(this, entry));
-  }.bind(this));
+    chrome.fileSystem.getDisplayPath(entry, function(path) {
+      for (var i = 0; i < self.tabs_.length; i++) {
+        if (self.tabs_[i].getPath() === path) {
+          if (entry.handle) {
+            self.tabs_[i].setEntry(entry);
+          }
+          self.showTab(self.tabs_[i].getId());
+          if (self.tabs_[i].isMissing()) {
+            entry.file(function(file) {
+              if (file) {
+                var reader = new FileReader();
+                reader.onloadend = function() {
+                  self.tabs_[i].setSession(self.editor_.newState(this.result));
+                  self.tabs_[i].setMissing(false);
+                  self.showTab(self.tabs_[i].getId());
+                  done(self.tabs_[i]);
+                };
+                reader.readAsText(file);
+              } else {
+                done(self.tabs_[i]);
+              }
+            });
+            return;
+          }
+          done(self.tabs_[i]);
+          return;
+        }
+      }
+
+      entry.file(function(file) {
+        self.readFileToNewTab_(entry, file, function(tab) {
+          done(tab);
+        });
+      });
+    });
+  });
 };
 
 /**
@@ -660,27 +697,35 @@ Tabs.prototype.modeAutoSet = function(tab) {
   }
 };
 
-Tabs.prototype.readFileToNewTab_ = function(entry, file) {
+Tabs.prototype.readFileToNewTab_ = function(entry, file, opt_callback) {
   util.triggerEvent('loadingfile');
   var self = this;
   if (!file) {
-    self.newTab('', entry, true, entry ? entry.name : 'Unknown');
+    var tab = self.newTab('', entry, true, entry ? entry.name : 'Unknown');
+    if (opt_callback) opt_callback(tab);
     return;
   }
   var reader = new FileReader();
-  reader.onerror = util.handleFSError;
+  reader.onerror = function(err) {
+    util.handleFSError(err);
+    if (opt_callback) opt_callback(null);
+  };
   reader.onloadend = function(e) {
     var tab = self.newTab(this.result, entry);
     if (file) {
       tab.lastModified_ = file.lastModified;
     }
-    if (self.tabs_.length === 2 &&
-        !self.tabs_[0].getEntry() &&
-        self.tabs_[0].isSaved() &&
-        self.tabs_[0].getName().indexOf('Untitled ') === 0 &&
-        self.tabs_[0].getContent_() === '') {
-      self.close(self.tabs_[0].getId());
+    for (var i = 0; i < self.tabs_.length; i++) {
+      if (self.tabs_[i] !== tab &&
+          !self.tabs_[i].getEntry() &&
+          self.tabs_[i].isSaved() &&
+          self.tabs_[i].getName().indexOf('Untitled ') === 0 &&
+          self.tabs_[i].getContent_() === '') {
+        self.close(self.tabs_[i].getId());
+        break;
+      }
     }
+    if (opt_callback) opt_callback(tab);
   };
   reader.readAsText(file);
 };

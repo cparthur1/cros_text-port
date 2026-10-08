@@ -32,9 +32,10 @@
     addListener: function(callback) {
       onLaunchedCallbacks.push(callback);
       if (pendingLaunchData) {
-        callback(pendingLaunchData);
+        var data = pendingLaunchData;
         pendingLaunchData = null;
         launched = true;
+        callback(data);
       }
     }
   };
@@ -42,23 +43,27 @@
   // --- chrome.app.window ---
   if (!chrome.app.window) chrome.app.window = {};
   chrome.app.window.create = function(url, options, callback) {
-    // If we are already in standalone mode and this is index.html, we might just want to focus.
-    // However, Chrome Apps usually open a NEW window.
-    // In PWA, we'll open a new tab/window if it's not the initial launch.
-    if (launched && url === 'index.html') {
-       console.log('App already launched, ignoring request to open another index.html window to avoid loops.');
-       if (callback) callback(chrome.app.window.current());
-       return;
+    // In PWA, the primary index.html window is ALREADY this window.
+    if (url === 'index.html' || url === './index.html' || url === '') {
+      var curWin = chrome.app.window.current();
+      if (callback) {
+        setTimeout(function() { callback(curWin); }, 0);
+      }
+      return curWin;
     }
 
-    console.warn('chrome.app.window.create called. Opening in new tab.');
+    console.warn('chrome.app.window.create called for other URL. Opening in new tab.');
     var win = window.open(url, '_blank');
-    if (callback) callback(win);
+    if (callback) {
+      setTimeout(function() { callback(win); }, 0);
+    }
+    return win;
   };
 
   chrome.app.window.current = function() {
     var isMaximized = false;
     return {
+      contentWindow: window,
       minimize: function() { console.log('Minimize not supported'); },
       maximize: function() { 
         console.log('Maximize');
@@ -619,6 +624,8 @@
     });
   };
 
+  window.pendingFileEntries = window.pendingFileEntries || [];
+
   // --- File Handling API ---
   if ('launchQueue' in window) {
     window.launchQueue.setConsumer(function(launchParams) {
@@ -634,16 +641,21 @@
         })
       };
 
-      if (!launched && onLaunchedCallbacks.length > 0) {
-        triggerLaunch(launchData);
-      } else if (launched && window.textApp && window.textApp.tabs_) {
-        // App is already running and focused (client_mode: "focus-existing").
+      if (window.textApp && window.textApp.tabs_) {
+        // App is already running and focused (client_mode: "focus-existing") or ready.
         // Open the received file entries directly as tabs.
         for (var i = 0; i < entries.length; i++) {
           window.textApp.tabs_.openFileEntry(entries[i]);
         }
+        window.focus();
       } else {
-        pendingLaunchData = launchData;
+        // App is still initializing! Store entries so openTabs will open them on startup.
+        window.pendingFileEntries = (window.pendingFileEntries || []).concat(entries);
+        if (!launched && onLaunchedCallbacks.length > 0) {
+          triggerLaunch(launchData);
+        } else {
+          pendingLaunchData = launchData;
+        }
       }
     });
   }

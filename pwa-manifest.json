@@ -57,6 +57,9 @@
       "purpose": "maskable"
     }
   ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "file_handlers": [
     {
       "action": "./index.html",
@@ -69,7 +72,7 @@
         }
       ],
       "accept": {
-        "text/plain": [".txt", ".text", ".log", ".ini", ".conf", ".cfg"],
+        "text/plain": [".txt", ".text", ".log", ".ini", ".conf", ".cfg", ".csv", ".tsv", ".env", ".toml"],
         "text/markdown": [".md", ".markdown", ".mdown", ".mkd"],
         "text/javascript": [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"],
         "text/css": [".css", ".scss", ".less"],

@@ -45,13 +45,27 @@ TextApp.prototype.init = function() {
  * @param {!Array.<FileEntry>} entries The file entries to be opened.
  */
 TextApp.prototype.openTabs = async function(entries) {
+  var allEntries = [];
+  if (entries && entries.length > 0) {
+    allEntries = allEntries.concat(entries);
+  }
+  if (window.pendingFileEntries && window.pendingFileEntries.length > 0) {
+    for (var i = 0; i < window.pendingFileEntries.length; i++) {
+      var pe = window.pendingFileEntries[i];
+      if (!allEntries.some(function(e) { return (e.name && pe.name && e.name === pe.name) || e === pe; })) {
+        allEntries.push(pe);
+      }
+    }
+    window.pendingFileEntries = [];
+  }
+
   if (!this.tabs_.hasOpenTab()) {
     await this.tabs_.restoreSession_();
   }
 
-  if (entries && entries.length > 0) {
-    for (var i = 0; i < entries.length; i++) {
-      this.tabs_.openFileEntry(entries[i]);
+  if (allEntries && allEntries.length > 0) {
+    for (var i = 0; i < allEntries.length; i++) {
+      await this.tabs_.openFileEntry(allEntries[i]);
     }
   }
 
