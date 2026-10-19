@@ -193,31 +193,37 @@ AiAgentController.prototype.init_ = function() {
 
   this.initKeyModalListeners_();
   this.initResizer_();
-  this.showWelcomeBanner_();
-  this.updateStatusIndicator_();
+  this.showEmptyState_();
 };
 
 /**
- * Shows the retrotech ASCII welcome banner in the terminal output.
+ * Shows a minimalist Material UI empty state in the chat output.
  * @private
  */
-AiAgentController.prototype.showWelcomeBanner_ = function() {
+AiAgentController.prototype.showEmptyState_ = function() {
   if (!this.terminalOutput_) return;
   this.terminalOutput_.innerHTML = '';
 
-  var banner = document.createElement('div');
-  banner.className = 'ai-banner';
-  banner.textContent =
-    '╔══════════════════════════════════════════════════════╗\n' +
-    '║  CROS TEXT // RETROTECH AI AGENT TERMINAL           ║\n' +
-    '║  MODEL: gemini-flash-lite-latest                     ║\n' +
-    '║  TOOLS: remove_lines, replace_lines, add_lines,      ║\n' +
-    '║         find_and_replace, read_document              ║\n' +
-    '╚══════════════════════════════════════════════════════╝\n' +
-    'Commands: Ask in plain English or code instructions.\n' +
-    'Shortcuts: /key <api-key> | /clear | /help | /reset';
+  var empty = document.createElement('div');
+  empty.className = 'ai-empty-state';
+  empty.id = 'ai-empty-state';
+  empty.innerHTML =
+    '<span class="material-icons ai-empty-icon">chat_bubble_outline</span>' +
+    '<div class="ai-empty-title">Ask anything or request edits</div>' +
+    '<div class="ai-empty-subtitle">Ask questions about this document or describe changes to lines and text.</div>';
 
-  this.terminalOutput_.appendChild(banner);
+  this.terminalOutput_.appendChild(empty);
+};
+
+/**
+ * Removes the empty state placeholder if present.
+ * @private
+ */
+AiAgentController.prototype.removeEmptyState_ = function() {
+  var el = document.getElementById('ai-empty-state');
+  if (el && el.parentNode) {
+    el.parentNode.removeChild(el);
+  }
 };
 
 /**
@@ -295,8 +301,7 @@ AiAgentController.prototype.closePanel = function() {
  */
 AiAgentController.prototype.clearTerminal = function() {
   this.chatHistory_ = [];
-  this.showWelcomeBanner_();
-  this.appendSystemMessage_('Session history cleared. Terminal reset.');
+  this.showEmptyState_();
 };
 
 /**
@@ -425,141 +430,122 @@ AiAgentController.prototype.handleSlashCommand_ = function(cmd) {
 };
 
 /**
- * Appends a user message to terminal.
+ * Appends a user message in Material bubble style.
  * @param {string} text
  * @private
  */
 AiAgentController.prototype.appendUserMessage_ = function(text) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-user';
 
-  var prompt = document.createElement('span');
-  prompt.className = 'ai-term-prompt';
-  prompt.textContent = '❯';
+  var bubble = document.createElement('div');
+  bubble.className = 'ai-user-bubble';
+  bubble.textContent = text;
 
-  var cmd = document.createElement('span');
-  cmd.className = 'ai-term-cmd';
-  cmd.textContent = text;
-
-  row.appendChild(prompt);
-  row.appendChild(cmd);
+  row.appendChild(bubble);
   this.terminalOutput_.appendChild(row);
   this.scrollToBottom_();
 };
 
 /**
- * Appends a system notification to terminal.
+ * Appends a system notification in Material caption style.
  * @param {string} text
  * @private
  */
 AiAgentController.prototype.appendSystemMessage_ = function(text) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-system';
+  row.textContent = text;
 
-  var prefix = document.createElement('span');
-  prefix.className = 'ai-sys-prefix';
-  prefix.textContent = '[SYS]';
-
-  var body = document.createElement('span');
-  body.textContent = text;
-
-  row.appendChild(prefix);
-  row.appendChild(body);
   this.terminalOutput_.appendChild(row);
   this.scrollToBottom_();
 };
 
 /**
- * Appends an error message to terminal.
+ * Appends an error message in Material alert style.
  * @param {string} text
  * @private
  */
 AiAgentController.prototype.appendErrorMessage_ = function(text) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-error';
+  row.innerHTML = '<span class="material-icons ai-msg-icon">error_outline</span><span>' + this.escapeHtml_(text) + '</span>';
 
-  var prefix = document.createElement('span');
-  prefix.className = 'ai-err-prefix';
-  prefix.textContent = '[ERR]';
-
-  var body = document.createElement('span');
-  body.textContent = text;
-
-  row.appendChild(prefix);
-  row.appendChild(body);
   this.terminalOutput_.appendChild(row);
   this.scrollToBottom_();
 };
 
 /**
- * Appends a tool execution call to terminal.
+ * Appends a tool execution call chip.
  * @param {string} name
  * @param {Object} args
  * @private
  */
 AiAgentController.prototype.appendToolInvocationMessage_ = function(name, args) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-tool';
 
-  var header = document.createElement('div');
-  header.className = 'ai-tool-header';
-  header.innerHTML = '<span class="material-icons ai-tool-icon">terminal</span> <span>[TOOL CALL] ' +
-                     this.escapeHtml_(name) + '</span>';
+  var chip = document.createElement('div');
+  chip.className = 'ai-tool-chip';
+  chip.innerHTML = '<span class="material-icons ai-tool-chip-icon">tune</span>' +
+                   '<span>Editing: ' + this.escapeHtml_(name) + '...</span>';
 
-  var argsSummary = document.createElement('div');
-  argsSummary.className = 'ai-tool-body';
-  argsSummary.textContent = JSON.stringify(args);
-
-  row.appendChild(header);
-  row.appendChild(argsSummary);
+  row.appendChild(chip);
   this.terminalOutput_.appendChild(row);
   this.scrollToBottom_();
 };
 
 /**
- * Appends a tool execution result to terminal.
+ * Appends a tool execution result chip.
  * @param {string} name
  * @param {Object} result
  * @private
  */
 AiAgentController.prototype.appendToolResultMessage_ = function(name, result) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-tool';
 
-  var header = document.createElement('div');
-  header.className = 'ai-tool-header';
-  var icon = result.success ? 'check_circle' : 'cancel';
-  header.innerHTML = '<span class="material-icons ai-tool-icon" style="color: ' +
-                     (result.success ? '#34d399' : '#f87171') + '">' + icon + '</span> ' +
-                     '<span>[RESULT: ' + this.escapeHtml_(name) + ']</span>';
+  var chip = document.createElement('div');
+  chip.className = 'ai-tool-chip ' + (result.success ? 'success' : 'error');
+  var icon = result.success ? 'check_circle' : 'error_outline';
+  var msg = result.message || result.error || (result.success ? 'Completed' : 'Error');
+  chip.innerHTML = '<span class="material-icons ai-tool-chip-icon">' + icon + '</span>' +
+                   '<span>' + this.escapeHtml_(msg) + '</span>';
 
-  var body = document.createElement('div');
-  body.className = 'ai-tool-body';
-  body.textContent = result.message || result.error || JSON.stringify(result);
-
-  row.appendChild(header);
-  row.appendChild(body);
+  row.appendChild(chip);
   this.terminalOutput_.appendChild(row);
   this.scrollToBottom_();
 };
 
 /**
- * Appends the model text response.
+ * Appends the model text response in Material bubble style.
  * @param {string} text
  * @private
  */
 AiAgentController.prototype.appendModelMessage_ = function(text) {
   if (!this.terminalOutput_) return;
+  this.removeEmptyState_();
+
   var row = document.createElement('div');
   row.className = 'ai-msg ai-msg-model';
 
   var content = document.createElement('div');
-  content.className = 'ai-model-content';
+  content.className = 'ai-model-bubble';
 
   if (window.marked && typeof window.marked.parse === 'function') {
     try {
@@ -577,7 +563,7 @@ AiAgentController.prototype.appendModelMessage_ = function(text) {
 };
 
 /**
- * Sets busy state and displays pulsing terminal indicator.
+ * Sets busy state and displays pulsing typing indicator.
  * @param {boolean} busy
  * @private
  */
@@ -600,15 +586,18 @@ AiAgentController.prototype.setBusy_ = function(busy) {
 };
 
 /**
- * Shows terminal typing/pulsing indicator.
+ * Shows Material pulsing typing indicator.
  * @private
  */
 AiAgentController.prototype.showTypingIndicator_ = function() {
   this.hideTypingIndicator_();
+  this.removeEmptyState_();
+
   var indicator = document.createElement('div');
   indicator.id = 'ai-typing-indicator';
   indicator.className = 'ai-typing-indicator';
-  indicator.innerHTML = '<span class="ai-term-prompt">❯</span> <span>agent processing with gemini-flash-lite<span class="ai-typing-dots">...</span></span>';
+  indicator.innerHTML = '<div class="ai-typing-bubble"><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span></div><span class="ai-typing-label">Thinking...</span>';
+
   if (this.terminalOutput_) {
     this.terminalOutput_.appendChild(indicator);
     this.scrollToBottom_();
@@ -616,7 +605,7 @@ AiAgentController.prototype.showTypingIndicator_ = function() {
 };
 
 /**
- * Hides terminal typing indicator.
+ * Hides typing indicator.
  * @private
  */
 AiAgentController.prototype.hideTypingIndicator_ = function() {
@@ -627,16 +616,16 @@ AiAgentController.prototype.hideTypingIndicator_ = function() {
 };
 
 /**
- * Updates status indicator text in terminal footer.
+ * Updates status indicator if present.
  * @private
  */
 AiAgentController.prototype.updateStatusIndicator_ = function() {
   if (!this.statusIndicator_) return;
   if (this.isBusy_) {
-    this.statusIndicator_.textContent = 'THINKING...';
+    this.statusIndicator_.textContent = 'Thinking...';
     this.statusIndicator_.className = 'ai-status-indicator busy';
   } else {
-    this.statusIndicator_.textContent = 'READY';
+    this.statusIndicator_.textContent = 'Ready';
     this.statusIndicator_.className = 'ai-status-indicator ready';
   }
 };
@@ -876,21 +865,14 @@ AiAgentController.prototype.callGemini_ = async function(userPrompt) {
     var filename = currentTab && typeof currentTab.getName === 'function' ? currentTab.getName() : 'untitled.txt';
 
     var systemPrompt =
-      'You are a surgical, precise AI coding and text editing assistant integrated into Chrome OS Text App.\n' +
-      'You are powered by gemini-flash-lite-latest.\n' +
-      'You have direct tool access to modify the user\'s document in the editor.\n' +
+      'You are a helpful, concise AI assistant integrated into Chrome OS Text App, powered by gemini-flash-lite-latest.\n' +
       'Active document: "' + filename + '".\n\n' +
-      'AVAILABLE TOOLS:\n' +
-      '- remove_lines(start_line, end_line): Deletes lines from start_line to end_line.\n' +
-      '- replace_lines(start_line, end_line, new_content): Replaces lines with new_content.\n' +
-      '- add_lines(line_number, content, position): Inserts content "before" or "after" line_number.\n' +
-      '- find_and_replace(find_text, replace_text, match_case, replace_all): Finds and replaces text.\n' +
-      '- read_document(start_line, end_line): Reads lines with line numbers.\n\n' +
-      'RULES:\n' +
-      '1. ALWAYS execute the appropriate tools to perform requested code/text modifications directly.\n' +
-      '2. Rely on the exact line numbers provided in the current document context.\n' +
-      '3. Be concise and technical in your feedback.\n' +
-      '4. Preserve formatting, indentation, and code style.';
+      'BEHAVIOR GUIDELINES:\n' +
+      '1. QUESTIONS & INQUIRIES: When the user asks a question about the document (such as explanations, summaries, code reviews, questions about syntax, or general questions), respond directly with clear, helpful markdown text. DO NOT invoke editing tools unless an edit or modification is requested.\n' +
+      '2. EDIT REQUESTS: When the user asks to modify, add, delete, replace, refactor, or fix code/text in the document, invoke the appropriate editing tool(s) directly (`remove_lines`, `replace_lines`, `add_lines`, `find_and_replace`).\n' +
+      '3. ACCURACY: When editing, rely on the exact line numbers provided in the current document context.\n' +
+      '4. PRESERVATION: Preserve formatting, indentation, and code style.\n' +
+      '5. TONE: Be concise, direct, and professional.';
 
     this.chatHistory_.push({
       role: 'user',

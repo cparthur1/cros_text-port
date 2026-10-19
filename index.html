@@ -252,46 +252,32 @@
         </ul>
       </div>
     </div>
-    <aside id="ai-panel" class="ai-panel" style="width: 0; visibility: hidden;" aria-label="AI Agent Terminal">
+    <aside id="ai-panel" class="ai-panel" style="width: 0; visibility: hidden;" aria-label="AI Assistant">
       <div class="ai-panel-inner">
-        <header class="ai-terminal-header">
+        <header class="ai-panel-header">
           <div class="ai-header-left">
-            <span class="ai-term-logo material-icons">terminal</span>
-            <span class="ai-title">AI TERMINAL</span>
-            <span id="ai-status-indicator" class="ai-status-indicator ready">READY</span>
+            <span class="ai-panel-title">Assistant</span>
           </div>
-          <div class="ai-header-controls">
-            <button id="ai-btn-key" class="ai-icon-btn" title="Configure Gemini API Key (/key)" aria-label="API Key">
-              <span class="material-icons">key</span>
-            </button>
-            <button id="ai-btn-clear" class="ai-icon-btn" title="Clear Terminal (/clear)" aria-label="Clear Terminal">
-              <span class="material-icons">delete_sweep</span>
-            </button>
-            <button id="ai-btn-close" class="ai-icon-btn" title="Close AI Panel" aria-label="Close Panel">
-              <span class="material-icons">close</span>
-            </button>
+          <div class="ai-header-actions">
+            <button id="ai-btn-key" class="mdc-icon-button material-icons" title="Gemini API Key" aria-label="API Key">key</button>
+            <button id="ai-btn-clear" class="mdc-icon-button material-icons" title="Clear conversation" aria-label="Clear conversation">delete_outline</button>
+            <button id="ai-btn-close" class="mdc-icon-button material-icons" title="Close" aria-label="Close">close</button>
           </div>
         </header>
 
-        <div class="ai-terminal-subbar">
-          <span class="ai-model-tag">MODEL: gemini-flash-lite-latest</span>
-          <span class="ai-tools-tag" title="Tools: remove_lines, replace_lines, add_lines, find_and_replace, read_document">TOOLS ACTIVE</span>
-        </div>
+        <div id="ai-terminal-output" class="ai-chat-output" role="log" aria-live="polite"></div>
 
-        <div id="ai-terminal-output" class="ai-terminal-output" role="log" aria-live="polite"></div>
-
-        <div class="ai-input-bar">
-          <span class="ai-input-prompt">❯</span>
-          <textarea id="ai-terminal-input"
-                    class="ai-terminal-input"
-                    rows="1"
-                    placeholder="Ask command or edit... (Shift+Enter for newline)"
-                    aria-label="Agent Command Input"
-                    autocomplete="off"
-                    spellcheck="false"></textarea>
-          <button id="ai-terminal-send" class="ai-send-btn" title="Execute Command (Enter)" aria-label="Send">
-            <span class="material-icons">send</span>
-          </button>
+        <div class="ai-input-container">
+          <div class="ai-input-wrapper">
+            <textarea id="ai-terminal-input"
+                      class="ai-chat-input"
+                      rows="1"
+                      placeholder="Ask a question or request an edit..."
+                      aria-label="Ask a question or request an edit"
+                      autocomplete="off"
+                      spellcheck="false"></textarea>
+            <button id="ai-terminal-send" class="ai-send-btn material-icons" title="Send (Enter)" aria-label="Send">send</button>
+          </div>
         </div>
       </div>
       <div id="ai-panel-resizer" class="ai-panel-resizer" title="Drag to resize"></div>

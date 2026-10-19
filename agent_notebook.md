@@ -40,14 +40,14 @@
     - Styled for both light (`body[theme="light"]`) and dark (`body[theme="dark"]`) themes using CSS variables.
     - External links clicked inside the preview open in a new tab via `window.open` rather than navigating away from the PWA.
 
-#### 4. AI Agent Feature (gemini-flash-lite-latest & Retrotech Terminal Panel)
-- **Requirement**:
+#### 4. AI Agent Feature (gemini-flash-lite-latest & Minimalistic Material UI V2 Panel)
+- **Requirement & Iterations**:
   1. Add an AI agent feature powered by model `gemini-flash-lite-latest`.
   2. Add `ai.svg` to the bottom bar (`#status-bar`) to open it in a side panel, **off by default**.
   3. When off, apply a `0% saturation and 20% darker filter` to the SVG (`filter: saturate(0%) brightness(80%)`).
-  4. When clicked, open the side panel to the left following the minimalistic retrotech design of the rest of the app with a chat box like a terminal where user asks for commands.
-  5. Create agent tools for the AI to let it remove, replace, and add specific lines; and find and replace specific texts.
-  6. Inspect `../Flashcards` for reference Gemini tool calling implementation without editing anything there.
+  4. When clicked, open the side panel to the left following a minimalistic Material UI V2 design matching the rest of the app with light/dark theme synchronization.
+  5. Remove retro header ("AI TERMINAL", "Ready", "TOOLS ACTIVE"), ASCII art, instructions, and the `>` prompt character from the input box.
+  6. Support both question-answering about the active document and direct editing tool operations (`remove_lines`, `replace_lines`, `add_lines`, `find_and_replace`, `read_document`).
 - **Architecture & Implementation Details**:
   - **Controller (`js/controllers/ai_agent.js`)**:
     - Created `AiAgentController(editor, tabs, settings)`.
@@ -58,12 +58,17 @@
       - `find_and_replace(find_text, replace_text, match_case, replace_all)`: Find and replace text throughout document.
       - `read_document(start_line, end_line)`: Inspects document lines with line numbers.
     - CodeMirror 6 Dispatch: All edits execute via `this.editor_.editorView_.dispatch({ changes, scrollIntoView: true })`, which preserves undo/redo history (Ctrl+Z / Ctrl+Y), dirties the tab, and immediately triggers markdown preview live updates.
+    - System Prompt & Inquiries: Instructs Gemini to distinguish between questions/inquiries (explanations, summaries, syntax, general questions answered directly in text) and edit requests (which trigger tool calls).
     - Tool Calling Loop: `callGemini_(userPrompt)` handles multi-turn agent execution with the Gemini REST API (`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=...`), automatically processing function calls, sending back `functionResponse` results, and generating final conversational responses.
     - Terminal Slash Commands: Supports `/key <api-key>`, `/clear`, `/reset`, `/model`, and `/help`.
     - Key Management: Stores API key in `localStorage` or `sessionStorage` with a clean configuration dialog (`#ai-key-modal`).
-  - **Side Panel (`#ai-panel`)**:
+  - **Material UI V2 Side Panel (`#ai-panel`)**:
     - Located in `#window-container` between `#sidebar` and `#main-container`, expanding on the left.
-    - Follows minimalistic retrotech terminal theme: monospaced font, terminal status badge (`READY` / `THINKING...`), command prompt (`❯`), tool call badges, syntax-highlighted / markdown results, draggable resizer handle (`#ai-panel-resizer`).
+    - Matches the app's light/dark theme seamlessly using CSS variables (`--ta-background-color`, `--ta-ui-text-color`, `--ta-divider-color`, `--ta-accent-color`, `--ta-highlight-color`).
+    - Clean Material header with title "Assistant" and MDC icon buttons (`key`, `delete_outline`, `close`).
+    - Clean Material chat bubbles: right-aligned user bubble, left-aligned assistant bubble with markdown rendering, and clean Material tool execution chips.
+    - Minimalist Material input container with rounded input wrapper and send icon button (no `>` prompt).
+    - Draggable resizer handle (`#ai-panel-resizer`).
   - **Status Bar Button (`#status-ai`)**:
     - Added to `.status-bar-right` with `assets/ai.svg`.
     - CSS filter when off: `filter: saturate(0%) brightness(80%); opacity: 0.75;`.
