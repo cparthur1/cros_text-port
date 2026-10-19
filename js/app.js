@@ -14,6 +14,7 @@ function TextApp() {
   this.settingsController_ = null;
   this.statusController_ = null;
   this.windowController_ = null;
+  this.shortcutsController_ = null;
 
   this.hasFrame_ = false;
 }
@@ -127,6 +128,7 @@ TextApp.prototype.initControllers_ = function() {
   this.searchController_ = new SearchController(this.editor_.getSearch());
   this.symbolsController_ = new SymbolsController(this.editor_);
   this.hotbarController_ = new HotbarController(this.editor_);
+  this.shortcutsController_ = new ShortcutsController(this.editor_);
   this.appStorageController_ = new AppStorageController(
       this.editor_, this.tabs_, this.dialogController_);
 };

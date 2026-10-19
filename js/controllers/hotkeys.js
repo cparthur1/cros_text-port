@@ -120,6 +120,17 @@ HotkeysController.prototype.onKeydown_ = function(e) {
         this.settings_.set('fontsize', fontSize * this.ZOOM_OUT_FACTOR);
         return false;
 
+      case '/':
+      case '?':
+        e.preventDefault();
+        var shortcutsDialog = document.getElementById('shortcuts-dialog');
+        if (shortcutsDialog && shortcutsDialog.open) {
+          shortcutsDialog.close();
+        } else {
+          util.triggerEvent('openshortcuts');
+        }
+        return false;
+
       default:
         break;
     }

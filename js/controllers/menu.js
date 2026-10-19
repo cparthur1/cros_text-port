@@ -239,7 +239,7 @@ MenuController.prototype.saveas_ = function() {
 };
 
 MenuController.prototype.openShortcuts_ = function() {
-  window.open('https://support.google.com/chromebook/answer/183101#textapp', '_blank');
+  util.triggerEvent('openshortcuts');
   return false;
 };
 

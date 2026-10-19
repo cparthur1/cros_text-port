@@ -55,6 +55,7 @@ While the original Chrome app was archived and built around legacy Chrome Apps A
 | `Alt` + `C` | Open HotBar to overwrite slot with selected snippet |
 | `Alt` + `V` | Open HotBar to paste snippet from slot |
 | `Ctrl` + `Z` / `Ctrl` + `Y` | Undo / Redo |
+| `Ctrl` + `/` | Open in-app Keyboard Shortcuts popup |
 
 ---
 

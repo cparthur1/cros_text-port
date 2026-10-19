@@ -238,7 +238,7 @@
                     id="open-shortcuts"
                     class="sidebar-button">
                   <span i18n-content="menuShortcuts"></span>
-                  <span class="icon material-icons">launch</span>
+                  <span class="icon material-icons">keyboard</span>
                 </button>
               </div>
             </div>
@@ -327,6 +327,30 @@
     </div>
   </div>
 
+  <dialog id="shortcuts-dialog" class="shortcuts-dialog" closedby="any" aria-labelledby="shortcuts-dialog-title">
+    <div class="shortcuts-dialog-inner">
+      <header class="shortcuts-header">
+        <div class="shortcuts-title-wrap">
+          <span class="shortcuts-header-icon material-icons">keyboard</span>
+          <h2 id="shortcuts-dialog-title" class="shortcuts-title" i18n-content="menuShortcuts">Keyboard shortcuts</h2>
+        </div>
+        <button type="button" class="shortcuts-close-button material-icons" id="shortcuts-close-button" aria-label="Close">close</button>
+      </header>
+
+      <div class="shortcuts-search-row">
+        <span class="shortcuts-search-icon material-icons">search</span>
+        <input type="search" id="shortcuts-search-input" class="shortcuts-search-input" placeholder="Search shortcuts..." aria-label="Search keyboard shortcuts" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="shortcuts-content" id="shortcuts-content" tabindex="0"></div>
+
+      <footer class="shortcuts-footer">
+        <span class="shortcuts-footer-hint">Press <kbd class="shortcut-key">Esc</kbd> or click outside to dismiss</span>
+        <span class="shortcuts-platform-hint" id="shortcuts-platform-hint"></span>
+      </footer>
+    </div>
+  </dialog>
+
   <!-- Already minified javascript libraries. Not included in compilation unit. -->
   <script src="js/pwa-compat.js" type="text/javascript"></script>
   <script src="js/util.js" type="text/javascript"></script>
@@ -347,6 +371,7 @@
   <script src="js/controllers/menu.js" type="text/javascript"></script>
   <script src="js/controllers/search.js" type="text/javascript"></script>
   <script src="js/controllers/settings.js" type="text/javascript"></script>
+  <script src="js/controllers/shortcuts.js" type="text/javascript"></script>
   <script src="js/controllers/status.js" type="text/javascript"></script>
   <script src="js/controllers/symbols.js" type="text/javascript"></script>
   <script src="js/controllers/app_storage.js" type="text/javascript"></script>
