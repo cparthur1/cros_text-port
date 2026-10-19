@@ -1,10 +1,11 @@
-const CACHE_NAME = 'text-app-v24';
+const CACHE_NAME = 'text-app-v25';
 const ASSETS = [
   './',
   './index.html',
   './pwa-manifest.json',
   './css/app.css',
   './css/print.css',
+  './assets/ai.svg',
   './assets/missing_file.svg',
   './assets/auto_saving.svg',
   './assets/auto_saving_frame1.svg',
@@ -22,6 +23,7 @@ const ASSETS = [
   './js/settings.js',
   './js/tabs.js',
   './js/util.js',
+  './js/controllers/ai_agent.js',
   './js/controllers/app_storage.js',
   './js/controllers/dialog.js',
   './js/controllers/hotbar.js',

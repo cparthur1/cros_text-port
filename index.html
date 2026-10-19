@@ -252,6 +252,50 @@
         </ul>
       </div>
     </div>
+    <aside id="ai-panel" class="ai-panel" style="width: 0; visibility: hidden;" aria-label="AI Agent Terminal">
+      <div class="ai-panel-inner">
+        <header class="ai-terminal-header">
+          <div class="ai-header-left">
+            <span class="ai-term-logo material-icons">terminal</span>
+            <span class="ai-title">AI TERMINAL</span>
+            <span id="ai-status-indicator" class="ai-status-indicator ready">READY</span>
+          </div>
+          <div class="ai-header-controls">
+            <button id="ai-btn-key" class="ai-icon-btn" title="Configure Gemini API Key (/key)" aria-label="API Key">
+              <span class="material-icons">key</span>
+            </button>
+            <button id="ai-btn-clear" class="ai-icon-btn" title="Clear Terminal (/clear)" aria-label="Clear Terminal">
+              <span class="material-icons">delete_sweep</span>
+            </button>
+            <button id="ai-btn-close" class="ai-icon-btn" title="Close AI Panel" aria-label="Close Panel">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="ai-terminal-subbar">
+          <span class="ai-model-tag">MODEL: gemini-flash-lite-latest</span>
+          <span class="ai-tools-tag" title="Tools: remove_lines, replace_lines, add_lines, find_and_replace, read_document">TOOLS ACTIVE</span>
+        </div>
+
+        <div id="ai-terminal-output" class="ai-terminal-output" role="log" aria-live="polite"></div>
+
+        <div class="ai-input-bar">
+          <span class="ai-input-prompt">❯</span>
+          <textarea id="ai-terminal-input"
+                    class="ai-terminal-input"
+                    rows="1"
+                    placeholder="Ask command or edit... (Shift+Enter for newline)"
+                    aria-label="Agent Command Input"
+                    autocomplete="off"
+                    spellcheck="false"></textarea>
+          <button id="ai-terminal-send" class="ai-send-btn" title="Execute Command (Enter)" aria-label="Send">
+            <span class="material-icons">send</span>
+          </button>
+        </div>
+      </div>
+      <div id="ai-panel-resizer" class="ai-panel-resizer" title="Drag to resize"></div>
+    </aside>
     <div id="main-container">
       <header>
         <button class="mdc-icon-button material-icons" id="toggle-sidebar" i18n-values="title:openSidebarButton;aria-label:openSidebarButton">menu</button>
@@ -322,6 +366,10 @@
             <span id="status-mode-text">Plain Text</span>
           </button>
           <span id="status-encoding" class="status-item" title="File Encoding">UTF-8</span>
+          <button id="status-ai" class="status-item status-button status-ai-btn" title="AI Agent Panel (gemini-flash-lite)" aria-label="Toggle AI Agent Panel" aria-pressed="false">
+            <img id="status-ai-icon" class="status-ai-icon" src="assets/ai.svg" alt="AI Agent">
+            <span class="status-ai-text">AI</span>
+          </button>
         </div>
       </footer>
     </div> <!-- main-container -->
@@ -358,6 +406,52 @@
     </div>
   </dialog>
 
+  <dialog id="ai-key-modal" class="ai-key-modal" closedby="any" aria-labelledby="ai-key-title">
+    <div class="ai-key-dialog-inner">
+      <header class="ai-key-header">
+        <div class="ai-key-title-wrap">
+          <span class="material-icons ai-key-icon">key</span>
+          <h2 id="ai-key-title" class="ai-key-title">Gemini API Configuration</h2>
+        </div>
+        <button type="button" class="ai-key-close-btn material-icons" id="ai-key-close" aria-label="Close">close</button>
+      </header>
+
+      <div class="ai-key-body">
+        <p class="ai-key-desc">
+          Enter your Google Gemini API Key to enable the AI Agent powered by <code>gemini-flash-lite-latest</code>.
+          Your key is stored locally in your browser and used only to contact Google Gemini API directly.
+        </p>
+
+        <div class="ai-key-input-wrap">
+          <label for="ai-key-input" class="ai-key-label">Google Gemini API Key:</label>
+          <div class="ai-key-field">
+            <input type="password" id="ai-key-input" class="ai-key-input" placeholder="AIzaSy..." autocomplete="off" spellcheck="false">
+            <button type="button" id="ai-key-toggle-vis" class="ai-key-eye-btn material-icons" title="Toggle visibility" aria-label="Toggle visibility">visibility</button>
+          </div>
+        </div>
+
+        <div class="ai-key-options">
+          <label class="ai-key-checkbox-label">
+            <input type="checkbox" id="ai-key-remember" checked>
+            <span>Remember key in this browser (localStorage)</span>
+          </label>
+        </div>
+
+        <div class="ai-key-info">
+          <span>Get a key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a></span>
+        </div>
+      </div>
+
+      <footer class="ai-key-footer">
+        <button type="button" id="ai-key-clear" class="ai-btn-secondary ai-btn-danger">Clear Key</button>
+        <div class="ai-key-footer-right">
+          <button type="button" id="ai-key-cancel" class="ai-btn-secondary">Cancel</button>
+          <button type="button" id="ai-key-save" class="ai-btn-primary">Save Key</button>
+        </div>
+      </footer>
+    </div>
+  </dialog>
+
   <!-- Already minified javascript libraries. Not included in compilation unit. -->
   <script src="js/pwa-compat.js" type="text/javascript"></script>
   <script src="js/util.js" type="text/javascript"></script>
@@ -385,6 +479,7 @@
   <script src="js/controllers/app_storage.js" type="text/javascript"></script>
   <script src="js/tabs.js" type="text/javascript"></script>
   <script src="js/controllers/window.js" type="text/javascript"></script>
+  <script src="js/controllers/ai_agent.js" type="text/javascript"></script>
   <script src="js/app.js" type="text/javascript"></script>
   <!-- /JS -->
 

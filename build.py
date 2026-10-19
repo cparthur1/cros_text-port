@@ -35,6 +35,7 @@ FILES_TO_COPY = [
   'icon/256x256.png',
   'icon/maskable.svg',
   'icon/ico.svg',
+  'assets/ai.svg',
   'assets/render_off.svg',
   'assets/render_on.svg',
   'third_party/marked/marked.min.js',

@@ -131,6 +131,8 @@ TextApp.prototype.initControllers_ = function() {
   this.shortcutsController_ = new ShortcutsController(this.editor_);
   this.appStorageController_ = new AppStorageController(
       this.editor_, this.tabs_, this.dialogController_);
+  this.aiAgentController_ = new AiAgentController(
+      this.editor_, this.tabs_, this.settings_);
 };
 
 /**

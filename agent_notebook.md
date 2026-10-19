@@ -39,3 +39,35 @@
     - Full GitHub Flavored Markdown (GFM) support, tables, task lists, code blocks, blockquotes, headings.
     - Styled for both light (`body[theme="light"]`) and dark (`body[theme="dark"]`) themes using CSS variables.
     - External links clicked inside the preview open in a new tab via `window.open` rather than navigating away from the PWA.
+
+#### 4. AI Agent Feature (gemini-flash-lite-latest & Retrotech Terminal Panel)
+- **Requirement**:
+  1. Add an AI agent feature powered by model `gemini-flash-lite-latest`.
+  2. Add `ai.svg` to the bottom bar (`#status-bar`) to open it in a side panel, **off by default**.
+  3. When off, apply a `0% saturation and 20% darker filter` to the SVG (`filter: saturate(0%) brightness(80%)`).
+  4. When clicked, open the side panel to the left following the minimalistic retrotech design of the rest of the app with a chat box like a terminal where user asks for commands.
+  5. Create agent tools for the AI to let it remove, replace, and add specific lines; and find and replace specific texts.
+  6. Inspect `../Flashcards` for reference Gemini tool calling implementation without editing anything there.
+- **Architecture & Implementation Details**:
+  - **Controller (`js/controllers/ai_agent.js`)**:
+    - Created `AiAgentController(editor, tabs, settings)`.
+    - Tools schema declared via `AiAgentController.TOOLS`:
+      - `remove_lines(start_line, end_line)`: Surgical deletion of line ranges.
+      - `replace_lines(start_line, end_line, new_content)`: Replacement of line ranges with updated code/text.
+      - `add_lines(line_number, content, position)`: Inserts content `'before'` or `'after'` target line.
+      - `find_and_replace(find_text, replace_text, match_case, replace_all)`: Find and replace text throughout document.
+      - `read_document(start_line, end_line)`: Inspects document lines with line numbers.
+    - CodeMirror 6 Dispatch: All edits execute via `this.editor_.editorView_.dispatch({ changes, scrollIntoView: true })`, which preserves undo/redo history (Ctrl+Z / Ctrl+Y), dirties the tab, and immediately triggers markdown preview live updates.
+    - Tool Calling Loop: `callGemini_(userPrompt)` handles multi-turn agent execution with the Gemini REST API (`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=...`), automatically processing function calls, sending back `functionResponse` results, and generating final conversational responses.
+    - Terminal Slash Commands: Supports `/key <api-key>`, `/clear`, `/reset`, `/model`, and `/help`.
+    - Key Management: Stores API key in `localStorage` or `sessionStorage` with a clean configuration dialog (`#ai-key-modal`).
+  - **Side Panel (`#ai-panel`)**:
+    - Located in `#window-container` between `#sidebar` and `#main-container`, expanding on the left.
+    - Follows minimalistic retrotech terminal theme: monospaced font, terminal status badge (`READY` / `THINKING...`), command prompt (`❯`), tool call badges, syntax-highlighted / markdown results, draggable resizer handle (`#ai-panel-resizer`).
+  - **Status Bar Button (`#status-ai`)**:
+    - Added to `.status-bar-right` with `assets/ai.svg`.
+    - CSS filter when off: `filter: saturate(0%) brightness(80%); opacity: 0.75;`.
+    - CSS filter when on: `filter: none; opacity: 1;`.
+  - **Offline & Cache**:
+    - Registered `ai.svg` and `js/controllers/ai_agent.js` in `sw.js` and bumped cache to `text-app-v25`.
+    - Registered `assets/ai.svg` in `build.py` `FILES_TO_COPY`.
