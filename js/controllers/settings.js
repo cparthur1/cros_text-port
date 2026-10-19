@@ -46,6 +46,7 @@ SettingsController.prototype.addInputListeners_ = function() {
         for (const element of
             document.querySelectorAll('input[name=setting-' + key + ']')) {
           element.addEventListener('input', () => this.saveSetting_(key));
+          element.addEventListener('change', () => this.saveSetting_(key));
         }
         break;
     }
@@ -95,7 +96,10 @@ SettingsController.prototype.show_ = function(key, value) {
     case 'radio':
       var radioInput = document.getElementById('setting-' + key + '-' + value);
       if (radioInput) {
-        radioInput.checked = true;
+        var allRadios = document.querySelectorAll('input[name=setting-' + key + ']');
+        for (const r of allRadios) {
+          r.checked = (r === radioInput);
+        }
       }
       break;
   }

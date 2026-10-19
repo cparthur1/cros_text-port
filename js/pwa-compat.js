@@ -296,8 +296,18 @@
 
   chrome.i18n.getMessage = function(messageName, substitutions) {
     var entry = messages[messageName] || defaultMessages[messageName];
+    if (!entry && messageName) {
+      var lowerFirst = messageName.charAt(0).toLowerCase() + messageName.slice(1);
+      entry = messages[lowerFirst] || defaultMessages[lowerFirst];
+    }
     if (!entry) return '';
     var message = (entry && entry.message) ? entry.message : (defaultMessages[messageName] ? defaultMessages[messageName].message : '');
+    if (!message && messageName) {
+      var lowerFirst = messageName.charAt(0).toLowerCase() + messageName.slice(1);
+      if (defaultMessages[lowerFirst]) {
+        message = defaultMessages[lowerFirst].message;
+      }
+    }
     if (!message) return '';
     if (substitutions !== undefined && substitutions !== null) {
       if (!Array.isArray(substitutions)) substitutions = [substitutions];

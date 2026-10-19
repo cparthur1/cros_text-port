@@ -1,4 +1,4 @@
-const CACHE_NAME = 'text-app-v23';
+const CACHE_NAME = 'text-app-v24';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ const ASSETS = [
   './assets/auto_saving_frame1.svg',
   './assets/auto_saving_frame2.svg',
   './assets/autosaved.svg',
+  './assets/render_off.svg',
+  './assets/render_on.svg',
   './assets/save.svg',
   './assets/sync_error.svg',
   './js/app.js',
@@ -36,6 +38,7 @@ const ASSETS = [
   './third_party/material-components-web/material-components-web.min.js',
   './third_party/material-design-icons/iconfont/material-icons.css',
   './third_party/material-design-icons/iconfont/MaterialIcons-Regular.woff2',
+  './third_party/marked/marked.min.js',
   './third_party/codemirror.next/codemirror.next.bin.js',
   './_locales/en/messages.json',
   './_locales/pt_BR/messages.json',
