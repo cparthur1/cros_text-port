@@ -76,3 +76,45 @@
   - **Offline & Cache**:
     - Registered `ai.svg` and `js/controllers/ai_agent.js` in `sw.js` and bumped cache to `text-app-v25`.
     - Registered `assets/ai.svg` in `build.py` `FILES_TO_COPY`.
+
+### Session Notes: Offline PWA Fix (Nov 2026)
+
+#### 1. Issue Description
+- The PWA was failing to open when the device was offline (displaying browser network error / dino page or failing on launch).
+
+#### 2. Root Cause Analysis
+1. **Navigation Request Handling & Query Strings**:
+   - `sw.js` did not differentiate between HTML navigation requests (`mode: 'navigate'`) and subresource requests.
+   - Exact URL matching (`caches.match(event.request)`) was used without `{ ignoreSearch: true }`. When opened from OS app launchers, PWA shortcuts, file associations, or with query parameters (e.g. `?param=pwa` or `?launch=true`), the exact cache match missed.
+   - When the cache missed, `fetch(event.request)` threw an unhandled `TypeError: Failed to fetch` without a `.catch()`, causing the promise passed to `respondWith()` to reject and Chrome to show the offline error screen.
+2. **Missing PWA Icons & Font Fallbacks in Cache**:
+   - The app's 9 icons in `icon/` (`16x16.png`, `32x32.png`, `48x48.png`, `64x64.png`, `96x96.png`, `128x128.png`, `256x256.png`, `maskable.svg`, `ico.svg`) were not precached in `ASSETS`.
+   - Missing font formats (`.woff`, `.ttf`) in `material-design-icons/iconfont/` were not precached.
+3. **Fragile Pre-caching Mechanism**:
+   - Standard `cache.addAll(ASSETS)` rejects the entire installation promise if even one resource encounters a network or HTTP error, resulting in no active service worker.
+4. **Unhandled Offline Errors on Registration & Controller Reload Loops**:
+   - In `index.html`, `registration.update()` lacked `.catch()`, producing unhandled promise rejections when offline.
+   - The `controllerchange` listener reloaded the page indiscriminately even on initial controller claim, interrupting offline startup.
+5. **i18n Offline Fallback Failure**:
+   - In `js/pwa-compat.js`, `en-US` locales attempted to fetch non-existent `_locales/en_US/messages.json`. When offline, the rejection bypassed the `.then(res => !res.ok)` fallback logic.
+
+#### 3. Solution Applied
+1. **Robust Navigation Fallback Strategy in `sw.js`**:
+   - Explicitly handled `event.request.mode === 'navigate'`.
+   - Used `caches.match(event.request, { ignoreSearch: true })` with fallback to `./index.html` or `./`.
+   - Ensured the navigation handler always returns a response and never throws an unhandled rejection.
+2. **Dynamic Asset Caching & Offline Safe Rejection**:
+   - For subresources, implemented Cache-First with `{ ignoreSearch: true }` and dynamic runtime caching of successful requests.
+   - Provided graceful fallback (`503 Service Unavailable (Offline)`) on cache misses when offline to avoid crashing the worker.
+3. **Complete Asset Pre-caching**:
+   - Added all `icon/*` assets, missing SVG files, and fallback font formats to `ASSETS` in `sw.js`.
+   - Wrapped pre-caching in `Promise.all(ASSETS.map(asset => cache.add(asset).catch(...)))` for resilience.
+   - Cleaned up `_locales` to strictly support English (`en`) and Portuguese (`pt_BR`) per user instructions.
+   - Bumped cache to `text-app-v26`.
+4. **Safe Service Worker Controller & Update Handling in `index.html`**:
+   - Caught errors on `registration.update().catch(...)`.
+   - Guarded `controllerchange` to only reload on actual upgrades when a controller was already present.
+5. **Locale Normalization in `js/pwa-compat.js`**:
+   - Normalized system languages directly to `pt_BR` or `en`, eliminating unnecessary 404 network fetches.
+6. **Modern Web Metadata**:
+   - Added `<meta name="mobile-web-app-capable" content="yes">` to `index.html`.

@@ -7,7 +7,8 @@
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Light weight text editor, port from Chrome OS' Text App">
 
-  <!-- Apple / Safari Web App Meta Tags -->
+  <!-- Mobile / PWA Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Text">
@@ -474,12 +475,22 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then(registration => {
           console.log('SW registered: ', registration);
-          registration.update();
+          registration.update().catch(err => {
+            console.log('SW update check skipped (offline):', err.message);
+          });
         }).catch(registrationError => {
           console.log('SW registration failed: ', registrationError);
         });
       });
+      let refreshing = false;
+      let hadController = Boolean(navigator.serviceWorker.controller);
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) {
+          hadController = true;
+          return;
+        }
+        if (refreshing) return;
+        refreshing = true;
         window.location.reload();
       });
     }

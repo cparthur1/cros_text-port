@@ -243,7 +243,8 @@
     "saveFilenamePrompt": { "message": "Save file as:" }
   };
   var defaultMessages = Object.assign({}, messages);
-  var locale = navigator.language.replace('-', '_');
+  var rawLocale = ((navigator.language || 'en').replace('-', '_')).toLowerCase();
+  var locale = rawLocale.startsWith('pt') ? 'pt_BR' : 'en';
   var defaultLocale = 'en';
 
   function loadLocale(lang, callback) {
@@ -252,24 +253,12 @@
       if (callback) callback();
       return;
     }
-    var url = '_locales/' + lang + '/messages.json';
+    var targetLocale = lang.toLowerCase().startsWith('pt') ? 'pt_BR' : 'en';
+    var url = '_locales/' + targetLocale + '/messages.json';
     fetch(url)
       .then(function(res) {
         if (!res.ok) {
-          if (lang === 'pt') {
-            return fetch('_locales/pt_BR/messages.json').then(function(r) {
-              if (!r.ok) throw new Error('Locale not found: pt_BR');
-              return r.json();
-            });
-          }
-          if (lang.indexOf('_') > -1) {
-            var baseLang = lang.split('_')[0];
-            return fetch('_locales/' + baseLang + '/messages.json').then(function(r) {
-              if (!r.ok) throw new Error('Locale not found: ' + lang);
-              return r.json();
-            });
-          }
-          throw new Error('Locale not found: ' + lang);
+          throw new Error('Locale not found: ' + targetLocale);
         }
         return res.json();
       })
@@ -278,7 +267,7 @@
         if (callback) callback();
       })
       .catch(function(err) {
-        console.warn('Failed to load locale ' + lang, err.message);
+        console.warn('Failed to load locale ' + targetLocale, err.message);
         if (callback) callback();
       });
   }
